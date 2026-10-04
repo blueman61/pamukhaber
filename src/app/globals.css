@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffaf5;
+  --foreground: #3b2f3a;
+  --muted: #8a7a86;
+  --card: #ffffff;
+  --border: #f1e4ea;
+  --accent: #f472b6;
+  --accent-soft: #fde2ef;
+  --sky: #bfe3ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1d1820;
+    --foreground: #f5edf2;
+    --muted: #b3a3ae;
+    --card: #2a232d;
+    --border: #3d3340;
+    --accent: #f9a8d4;
+    --accent-soft: #4a2a3c;
+    --sky: #2b4660;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-sky-soft: var(--sky);
+  --font-sans: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.text-shadow-soft {
+  text-shadow: 0 1px 12px rgb(0 0 0 / 0.35);
+}
+
+@keyframes pamuk-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: pamuk-pop 0.35s ease-out;
+}
+
+@keyframes pamuk-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-float {
+  animation: pamuk-float 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pop,
+  .animate-float {
+    animation: none;
+  }
+}
