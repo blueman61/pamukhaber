@@ -55,3 +55,22 @@ export function VolumeIcon({ className, filled }: IconProps) {
     </svg>
   );
 }
+
+/** Yuvarlak içinde nokta: haber bilgisi düğmesi. */
+export function DotIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function CloseIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
+  );
+}

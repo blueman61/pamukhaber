@@ -23,6 +23,12 @@ export type FeedStory = {
   sponsorUrl: string | null;
   isDemo: boolean;
   likes: number;
+  origin: "editor" | "reader" | "partner";
+  submitterName: string | null;
+  verification: "verified" | "source" | "unverified";
+  verificationNote: string | null;
+  extraSources: string[];
+  aiAssisted: boolean;
   createdAt: string;
 };
 
@@ -43,6 +49,12 @@ export function toFeedStory(s: Story): FeedStory {
     sponsorUrl: s.sponsorUrl,
     isDemo: s.isDemo,
     likes: s.likes,
+    origin: s.origin,
+    submitterName: s.submitterName,
+    verification: s.verification,
+    verificationNote: s.verificationNote,
+    extraSources: s.extraSources ? s.extraSources.split("\n").filter(Boolean) : [],
+    aiAssisted: s.aiAssisted,
     createdAt: s.createdAt.toISOString(),
   };
 }

@@ -124,6 +124,12 @@ describe("buildSlides", () => {
     sponsorUrl: null,
     isDemo: false,
     likes: 0,
+    origin: "editor",
+    submitterName: null,
+    verification: "source",
+    verificationNote: null,
+    extraSources: [],
+    aiAssisted: false,
     createdAt: new Date(0).toISOString(),
   });
 

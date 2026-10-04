@@ -95,6 +95,8 @@ async function main() {
       slug: `ornek-${slugify(s.title)}-${i}`,
       sourceName: s.isSponsored ? null : "Pamuk Haber (örnek)",
       isDemo: true,
+      verification: "unverified" as const,
+      verificationNote: "Örnek içerik — gerçek bir haber değildir.",
     }));
     await db.insert(stories).values(rows);
     console.log(`Hikâyeler: ${rows.length} örnek hikâye eklendi.`);

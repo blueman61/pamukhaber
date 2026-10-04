@@ -2,8 +2,10 @@
 
 Yalnızca güzel ve iç ısıtan haberlerin, TikTok benzeri dikey kaydırmalı kartlarla sunulduğu mobil öncelikli site.
 
-- **Okur tarafı:** Tam ekran kartlar, kategori sekmeleri, çift dokunarak beğenme, paylaşım bağlantıları, bülten kaydı, ana ekrana eklenebilir (PWA).
-- **Editör tarafı (`/admin`):** RSS kaynaklarından otomatik toplanan adaylar pozitiflik skoruna göre sıralanır; **hiçbir haber editör onayı olmadan yayına girmez.** Editör Türkçe başlık + özet yazar, kategori ve görsel/video seçer.
+- **Okur tarafı:** Tam ekran kartlar, kategori sekmeleri, çift dokunarak beğenme, paylaşım bağlantıları, bülten kaydı, ana ekrana eklenebilir (PWA). Görsel, MP4, **YouTube/Shorts, TikTok ve Instagram Reels** gömme desteği.
+- **Şeffaflık:** Her kartta **yuvarlak içinde nokta** düğmesi: kaynak ve ek kaynaklar, doğrulama durumu (Doğrulandı / Kaynağa dayalı / Doğrulanmadı), haberi kimin getirdiği (editör / okur / kurum), yapay zekâ desteği bilgisi ve **yanlış bilgi / sahte içerik bildirme**. Aynı hikâyeye 3 farklı okur bildirimde bulunursa hikâye editör incelemesine kadar gizlenir.
+- **Okur gönderimi (`/gonder`):** Okurlar haber bağlantısı gönderir; editör kuyruğuna "Okur" rozetiyle düşer.
+- **Editör tarafı (`/admin`):** RSS kaynaklarından otomatik toplanan adaylar pozitiflik skoruna göre sıralanır; **hiçbir haber editör onayı olmadan yayına girmez.** Editör Türkçe başlık + özet yazar, kategori ve görsel/video seçer. **Gemini** ile tek tıkla Türkçe taslak ve "başka kaynaklarda ara" doğrulama yardımı (isteğe bağlı).
 - **Gelir altyapısı:** Açıkça etiketli sponsorlu kartlar, bülten aboneleri, "Destek ol" bağlantısı.
 
 <p>
@@ -46,29 +48,36 @@ src/
   app/
     page.tsx               Akış (ilk sayfa sunucuda render edilir)
     h/[slug]/page.tsx      Paylaşım bağlantısı: önce o hikâye, sonra akış (+ OG etiketleri)
-    hakkinda/              Misyon, editoryal ilkeler, destek
-    admin/                 Editör paneli (giriş, aday kuyruğu, hikâye formu, kaynaklar, aboneler)
+    hakkinda/              Misyon, editoryal ilkeler, şeffaflık, destek
+    gonder/                Okur haber gönderme formu
+    admin/                 Editör paneli (giriş, aday kuyruğu, hikâye formu + AI, yayında, bildirimler, kaynaklar, aboneler)
     api/stories            Sayfalı akış (cursor), ?kategori= filtresi
     api/stories/[id]/like  Beğeni sayacı
+    api/stories/[id]/report  Okur bildirimi (eşikte otomatik gizleme)
     api/subscribe          Bülten kaydı
     api/cron/ingest        Zamanlanmış RSS taraması (CRON_SECRET korumalı)
-  components/              Feed, StoryCard, StoryMedia, NewsletterCard, EndCard, TopBar
+  components/              Feed, StoryCard, StoryMedia (gömmeler), StoryInfoSheet (bilgi + bildirim), NewsletterCard, EndCard, TopBar
   db/                      Drizzle şeması, bağlantı, seed
-  lib/                     ingest (RSS), positivity (skor), validation, session/auth, feed düzeni
+  lib/                     ingest (RSS), positivity (skor), validation, media (gömme linkleri), ai (Gemini),
+                           reports, submissions, session/auth, feed düzeni
   proxy.ts                 /admin ve /api/admin yollarını oturum çereziyle korur
 drizzle/                   SQL migration'ları
 tests/                     Vitest birim/entegrasyon testleri
 ```
 
 - **Veritabanı:** SQLite (libSQL). Yerelde `file:./data/pamuk.db`; canlıda [Turso](https://turso.tech) — aynı sürücü, yalnızca `DATABASE_URL` değişir.
-- **Medya türleri:** Görsel URL, dikey MP4 video (görünürken sessiz otomatik oynar), YouTube/Shorts embed, ya da medya yoksa kategoriye özel pastel degrade.
+- **Medya türleri:** Görsel URL, dikey MP4 video (görünürken sessiz otomatik oynar), YouTube/Shorts, TikTok ve Instagram Reels gömme (paylaşım linkiyle; `vm.tiktok.com` kısa linkleri kaydederken çözülür), ya da medya yoksa kategoriye özel pastel degrade.
+  - Gömülü oynatıcılar dokunmaları yuttuğu için üstlerinde şeffaf bir katman vardır; kaydırma akışa gider. "Oynatıcıyı kullan / Oynat" ile katman kalkar, "Kaydırmaya dön" ile geri gelir.
+  - Instagram gömmeleri otomatik oynamaz (platform kısıtı). Video sahibi gömmeyi kapattıysa ya da hesap gizliyse içerik görünmez.
+- **Yapay zekâ (Gemini):** `GEMINI_API_KEY` tanımlıysa hikâye formunda iki düğme çıkar: *Taslak* (haber sayfasını okuyup Türkçe başlık/özet/kategori, teyit edilmesi gereken iddialar ve uyarılar önerir) ve *Başka kaynaklarda ara* (Google Search grounding ile bağımsız kaynak arar). Çıktı yalnızca öneridir; yayın kararı editördedir ve okura "yapay zekâ desteğiyle hazırlandı" bilgisi gösterilir. Model `GEMINI_MODEL` ile değiştirilebilir.
+- **Kötüye kullanım önlemleri:** Bildirim ve okur gönderimlerinde kişiyi ayırt etmek için IP + tarayıcı bilgisi gizli tuzla tek yönlü özetlenir (ham hâli saklanmaz). Okur gönderimlerinde günde 5 sınır ve bal küpü alanı; sunucu, okurun verdiği adresi çekmeden önce yerel ağ/IP adreslerini reddeder (SSRF koruması).
 - **Kimlik doğrulama:** Tek editör şifresi (`ADMIN_PASSWORD`), `AUTH_SECRET` ile imzalı HttpOnly JWT çerezi. Sunucu eylemleri oturumu ayrıca doğrular.
 
 ## Canlıya alma (Vercel + Turso)
 
 1. Turso'da veritabanı oluşturun: `turso db create pamukhaber`, URL ve token alın.
 2. Yerelden migration ve seed: `DATABASE_URL=libsql://... DATABASE_AUTH_TOKEN=... npm run setup`
-3. Projeyi Vercel'e bağlayın; ortam değişkenlerini girin: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `ADMIN_PASSWORD`, `AUTH_SECRET` (`openssl rand -base64 32`), `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, isteğe bağlı `NEXT_PUBLIC_SUPPORT_URL`, `NEXT_PUBLIC_CONTACT_EMAIL`.
+3. Projeyi Vercel'e bağlayın; ortam değişkenlerini girin: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `ADMIN_PASSWORD`, `AUTH_SECRET` (`openssl rand -base64 32`), `CRON_SECRET`, `NEXT_PUBLIC_SITE_URL`, isteğe bağlı `GEMINI_API_KEY`, `GEMINI_MODEL`, `REPORT_HIDE_THRESHOLD`, `NEXT_PUBLIC_SUPPORT_URL`, `NEXT_PUBLIC_CONTACT_EMAIL`.
 4. `vercel.json` günde bir RSS taraması tanımlar. Daha sık tarama için GitHub deposunda `SITE_URL` ve `CRON_SECRET` sırlarını tanımlayın; `.github/workflows/ingest.yml` günde 4 kez tarar.
 
 > Vercel'de `file:` SQLite kalıcı değildir; canlıda mutlaka Turso (veya başka bir libSQL sunucusu) kullanın.

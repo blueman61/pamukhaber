@@ -1,15 +1,17 @@
 import Link from "next/link";
-import { count, desc, eq } from "drizzle-orm";
+import { count, countDistinct, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { candidates, sources, stories, subscribers } from "@/db/schema";
+import { candidates, reports, sources, stories, subscribers } from "@/db/schema";
 import { requireAdmin } from "@/lib/auth";
 import { getCategory } from "@/lib/categories";
+import { reportHideThreshold, reportReasonLabel } from "@/lib/reports";
 import {
   addSource,
   deleteDemoStories,
   deleteStory,
   logout,
   rejectCandidate,
+  resolveReports,
   runIngest,
   setStoryStatus,
   toggleSource,
@@ -20,6 +22,7 @@ export const dynamic = "force-dynamic";
 const TABS = [
   { id: "kuyruk", label: "Aday kuyruğu" },
   { id: "yayinda", label: "Yayında" },
+  { id: "bildirimler", label: "Bildirimler" },
   { id: "kaynaklar", label: "Kaynaklar" },
   { id: "aboneler", label: "Aboneler" },
 ] as const;
@@ -35,9 +38,10 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const { tab: rawTab, mesaj } = await searchParams;
   const tab: TabId = TABS.some((t) => t.id === rawTab) ? (rawTab as TabId) : "kuyruk";
 
-  const [[{ value: queueCount }], [{ value: subscriberCount }]] = await Promise.all([
+  const [[{ value: queueCount }], [{ value: subscriberCount }], [{ value: reportedCount }]] = await Promise.all([
     db.select({ value: count() }).from(candidates).where(eq(candidates.status, "new")),
     db.select({ value: count() }).from(subscribers),
+    db.select({ value: countDistinct(reports.storyId) }).from(reports).where(eq(reports.status, "open")),
   ]);
 
   return (
@@ -67,6 +71,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
             {t.label}
             {t.id === "kuyruk" && queueCount > 0 && ` (${queueCount})`}
             {t.id === "aboneler" && ` (${subscriberCount})`}
+            {t.id === "bildirimler" && reportedCount > 0 && ` (${reportedCount})`}
           </Link>
         ))}
       </nav>
@@ -80,6 +85,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
       <div className="mt-6">
         {tab === "kuyruk" && <QueueTab />}
         {tab === "yayinda" && <PublishedTab />}
+        {tab === "bildirimler" && <ReportsTab />}
         {tab === "kaynaklar" && <SourcesTab />}
         {tab === "aboneler" && <SubscribersTab />}
       </div>
@@ -131,7 +137,13 @@ async function QueueTab() {
                   >
                     skor {c.score > 0 ? `+${c.score}` : c.score}
                   </span>
-                  <span>{sourceName ?? "Bilinmeyen kaynak"}</span>
+                  {c.origin === "reader" ? (
+                    <span className="rounded-full bg-pink-100 px-2 py-0.5 font-bold text-pink-800">
+                      💌 Okur{c.submitterName ? ` · ${c.submitterName}` : ""}
+                    </span>
+                  ) : (
+                    <span>{sourceName ?? "Bilinmeyen kaynak"}</span>
+                  )}
                   <span>· {fmt(c.publishedAt ?? c.createdAt)}</span>
                 </div>
                 <a href={c.url} target="_blank" rel="noopener" className="mt-1 block font-bold leading-snug hover:underline">
@@ -182,6 +194,12 @@ async function PublishedTab() {
                 </span>
                 {s.isSponsored && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">Sponsorlu</span>}
                 {s.isDemo && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-900">Örnek</span>}
+                {s.hiddenReason === "reports" && (
+                  <Link href="/admin?tab=bildirimler" className="rounded-full bg-rose-100 px-2 py-0.5 text-rose-800">
+                    Bildirim nedeniyle gizlendi
+                  </Link>
+                )}
+                {s.origin === "reader" && <span className="rounded-full bg-pink-100 px-2 py-0.5 text-pink-800">Okur</span>}
                 {s.status === "hidden" && <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-neutral-700">Gizli</span>}
                 <span>· ❤️ {s.likes}</span>
                 <span>· {fmt(s.createdAt)}</span>
@@ -203,6 +221,82 @@ async function PublishedTab() {
                   <input type="hidden" name="id" value={s.id} />
                   <button className={`${btn} bg-background text-rose-600`}>Sil</button>
                 </form>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+async function ReportsTab() {
+  const open = await db
+    .select()
+    .from(reports)
+    .where(eq(reports.status, "open"))
+    .orderBy(desc(reports.createdAt))
+    .limit(300);
+  const storyIds = [...new Set(open.map((r) => r.storyId))];
+  const storyRows = storyIds.length ? await db.select().from(stories).where(inArray(stories.id, storyIds)) : [];
+  const threshold = reportHideThreshold();
+
+  if (storyRows.length === 0) {
+    return <p className="mt-10 text-center text-muted">Açık bildirim yok. 🌸</p>;
+  }
+
+  return (
+    <section>
+      <p className="text-sm text-muted">
+        Aynı hikâyeye {threshold} farklı okurdan bildirim gelince hikâye otomatik gizlenir. Bildirimleri inceleyip karar
+        ver: asılsızsa hikâye yeniden yayına girer.
+      </p>
+      <ul className="mt-5 space-y-3">
+        {storyRows.map((s) => {
+          const list = open.filter((r) => r.storyId === s.id);
+          return (
+            <li key={s.id} className="rounded-3xl border border-border bg-card p-4">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-800">{list.length} bildirim</span>
+                {s.status === "hidden" ? (
+                  <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-neutral-700">
+                    {s.hiddenReason === "reports" ? "Otomatik gizlendi" : "Gizli"}
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-800">Yayında</span>
+                )}
+              </div>
+              <p className="mt-1 font-bold">{s.title}</p>
+              {s.sourceUrl && (
+                <a href={s.sourceUrl} target="_blank" rel="noopener" className="text-xs text-muted underline">
+                  Kaynağı aç ↗
+                </a>
+              )}
+              <ul className="mt-3 space-y-1.5">
+                {list.map((r) => (
+                  <li key={r.id} className="rounded-xl bg-background px-3 py-2 text-sm">
+                    <span className="font-semibold">{reportReasonLabel(r.reason)}</span>
+                    <span className="text-xs text-muted"> · {fmt(r.createdAt)}</span>
+                    {r.note && <p className="mt-0.5 text-muted">“{r.note}”</p>}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <form action={resolveReports}>
+                  <input type="hidden" name="id" value={s.id} />
+                  <input type="hidden" name="decision" value="dismiss" />
+                  <button className={`${btn} bg-emerald-100 text-emerald-900`}>
+                    Asılsız{s.hiddenReason === "reports" ? " — yayına geri al" : ""}
+                  </button>
+                </form>
+                <form action={resolveReports}>
+                  <input type="hidden" name="id" value={s.id} />
+                  <input type="hidden" name="decision" value="uphold" />
+                  <button className={`${btn} bg-rose-100 text-rose-900`}>Haklı — gizli tut</button>
+                </form>
+                <Link href={`/admin/yeni?hikaye=${s.id}`} className={`${btn} bg-background`}>
+                  Düzelt
+                </Link>
               </div>
             </li>
           );

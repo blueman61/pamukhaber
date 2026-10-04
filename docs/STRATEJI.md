@@ -16,8 +16,8 @@ Bu doküman üç soruya cevap veriyor: **İçerik nereden gelecek? Para nasıl k
 | **B. Ana akım medyanın yumuşak bölümleri** | BBC Türkçe, NTV Bilim, gazetelerin yaşam/bilim/kültür/spor beslemeleri | RSS + pozitiflik skoru | Hacim yüksek, isabet düşük; skor kuyruğu sıralar, editör seçer. |
 | **C. Birinci elden kurumlar** | Belediyeler, üniversiteler, TÜBİTAK, hayvan hakları ve çevre dernekleri, hastane vakıfları, Kızılay, AFAD gönüllü programları | Basın bülteni RSS'i / e-posta listesi / X hesapları | Türkiye'ye özgü, rekabeti az içerik. Haber doğrulaması kolay. |
 | **D. Görsel/video havuzları** | Pexels, Pixabay, Unsplash (ücretsiz lisans) | Editör arayıp ekler | Haber metniyle birlikte kullanılacak "atmosfer" görselleri. Kredi alanı doldurulur. |
-| **E. Sosyal medya** | YouTube Shorts, izinli Instagram/TikTok içerik üreticileri | Resmi embed veya yazılı izin | YouTube embed sistemde hazır. Başkasının videosunu indirip yüklemek yok. |
-| **F. Okurlardan gelenler** (yol haritası) | "Sen de bir güzellik gördün mü?" formu | Form + editör doğrulaması | Topluluk duygusu ve özgün içerik. Doğrulanmadan yayına girmez. |
+| **E. Sosyal medya** | YouTube Shorts, TikTok, Instagram Reels | Resmi embed (paylaşım linki panelden girilir) | YouTube, TikTok ve Reels gömme sistemde hazır. Video platformda kalır, telif ve görüntülenme içerik sahibinde kalır. Başkasının videosunu indirip yüklemek yok. |
+| **F. Okurlardan gelenler** ✅ | `/gonder` formu | Form → editör kuyruğu ("Okur" rozeti) → doğrulama | Topluluk duygusu ve özgün içerik. Doğrulanmadan yayına girmez; okur izin verirse adıyla anılır. |
 | **G. Kendi ürettiğimiz dikey videolar** (yol haritası) | 15–30 sn "günün haberi" videoları | Canva/CapCut şablonu + seslendirme | TikTok/Reels/Shorts'ta büyüme motoru; siteye geri trafik getirir. |
 
 ### 1.2 Hukuki çerçeve (önemli)
@@ -29,7 +29,14 @@ Bu doküman üç soruya cevap veriyor: **İçerik nereden gelecek? Para nasıl k
 - **Bülten (KVKK + İYS):** E-posta toplarken aydınlatma metni gerekir; ticari ileti (sponsorlu bülten) göndermeden önce İleti Yönetim Sistemi (İYS) kaydı ve onay süreci tamamlanmalı.
 - Yayına çıkmadan önce bir **bilişim/telif avukatıyla 1 saatlik görüşme** yapılmasını öneririm; bu doküman hukuki tavsiye değildir.
 
-### 1.3 Editoryal ilkeler
+### 1.3 Şeffaflık ve okur bildirimleri
+
+- Her kartta **yuvarlak içinde nokta** düğmesi: kaynak + ek kaynaklar, doğrulama durumu, haberi kimin getirdiği, yapay zekâ desteği.
+- **Doğrulama seviyeleri:** ✅ *Doğrulandı* (ana kaynağa ek en az bir bağımsız kaynak — sistem bunu zorunlu tutar), 🔗 *Kaynağa dayalı* (tek güvenilir kaynak), ⏳ *Doğrulanmadı*.
+- **Bildirim politikası:** Okurlar yanlış bilgi, sahte içerik, telif, uygunsuz içerik bildirebilir. Aynı hikâyeye 3 farklı okurdan açık bildirim gelirse hikâye otomatik gizlenir ve editör incelemesine düşer. Editör "asılsız" derse hikâye geri döner ve o bildirimler bir daha sayılmaz; "haklı" derse gizli kalır. Hedef: 24 saat içinde karar.
+- Kötüye kullanım (toplu bildirimle beğenilmeyen haberi kaldırtma) riskine karşı eşik `REPORT_HIDE_THRESHOLD` ile yükseltilebilir.
+
+### 1.4 Editoryal ilkeler
 
 1. **Gerçek ve doğrulanabilir:** En az bir güvenilir kaynak; mümkünse birinci el.
 2. **Tık tuzağı yok:** Başlık ne söylüyorsa haber o.
@@ -139,8 +146,8 @@ Temel ilke: **Gelir modeli, markanın vaadini bozmamalı.** Akışa rastgele pro
 |---|---|
 | **Şimdi (MVP)** ✅ | Kaydırmalı akış, kategoriler, beğeni, paylaşım, bülten kaydı, sponsorlu kart, editör paneli, RSS toplama, PWA |
 | **Ay 1** | Alan adı + Vercel + Turso kurulumu, gerçek kaynakların doğrulanması, ilk 300 hikâye, analitik, KVKK metinleri, bülten servisi (Buttondown/Brevo) entegrasyonu |
-| **Ay 2** | Yapay zekâ destekli taslak: editör "Taslak üret" der, yapay zekâ Türkçe başlık+özet önerir, **onay yine editörde**. Editör hızını 2–3 katına çıkarır |
-| **Ay 3** | Okur gönderimleri formu, PWA bildirimleri ("Günün güzel haberi hazır ☀️"), haftalık derleme sayfası |
+| **Faz 2** ✅ | Gemini ile yapay zekâ taslak + "başka kaynaklarda ara" doğrulama yardımı (**onay yine editörde**), TikTok/Reels gömme, bilgi paneli ve okur bildirimleri, okur gönderim formu |
+| **Ay 3** | PWA bildirimleri ("Günün güzel haberi hazır ☀️"), haftalık derleme sayfası, okur gönderenlere "haberin yayında" e-postası |
 | **Ay 4–6** | Kendi dikey video üretim hattı, B2B kiosk modu, reklamsız üyelik |
 | **Sonrası** | Yerel haber haritası ("Senin şehrinden güzel haberler"), iOS/Android uygulaması, İngilizce sürüm |
 

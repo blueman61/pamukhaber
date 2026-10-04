@@ -1,8 +1,15 @@
 import { isCategory, type CategorySlug } from "./categories";
-import { MEDIA_TYPES, youtubeId, type MediaType } from "./media";
+import { instagramShortcode, MEDIA_TYPES, tiktokId, youtubeId, type MediaType } from "./media";
 
 export const TITLE_MAX = 90;
 export const SUMMARY_MAX = 320;
+export const NOTE_MAX = 500;
+export const EXTRA_SOURCES_MAX = 5;
+
+export const ORIGINS = ["editor", "reader", "partner"] as const;
+export type Origin = (typeof ORIGINS)[number];
+export const VERIFICATIONS = ["verified", "source", "unverified"] as const;
+export type Verification = (typeof VERIFICATIONS)[number];
 
 export type StoryInput = {
   title: string;
@@ -16,6 +23,12 @@ export type StoryInput = {
   isSponsored: boolean;
   sponsorName: string | null;
   sponsorUrl: string | null;
+  origin: Origin;
+  submitterName: string | null;
+  verification: Verification;
+  verificationNote: string | null;
+  extraSources: string | null;
+  aiAssisted: boolean;
 };
 
 export type FieldErrors = Partial<Record<keyof StoryInput, string>>;
@@ -60,6 +73,10 @@ export function validateStoryForm(form: FormData): ValidationResult {
   if (mediaType !== "none") {
     if (!mediaUrl || !isHttpUrl(mediaUrl)) errors.mediaUrl = "Geçerli bir medya bağlantısı girin.";
     else if (mediaType === "youtube" && !youtubeId(mediaUrl)) errors.mediaUrl = "Geçerli bir YouTube bağlantısı girin.";
+    else if (mediaType === "tiktok" && !tiktokId(mediaUrl))
+      errors.mediaUrl = "Geçerli bir TikTok video bağlantısı girin (tiktok.com/@kullanici/video/…).";
+    else if (mediaType === "instagram" && !instagramShortcode(mediaUrl))
+      errors.mediaUrl = "Geçerli bir Instagram Reels bağlantısı girin (instagram.com/reel/…).";
   }
 
   if (sourceUrl && !isHttpUrl(sourceUrl)) errors.sourceUrl = "Geçerli bir kaynak bağlantısı girin.";
@@ -69,6 +86,25 @@ export function validateStoryForm(form: FormData): ValidationResult {
     if (!sponsorName) errors.sponsorName = "Sponsorlu içerikte sponsor adı zorunlu.";
     if (sponsorUrl && !isHttpUrl(sponsorUrl)) errors.sponsorUrl = "Geçerli bir sponsor bağlantısı girin.";
   }
+
+  const originRaw = str(form.get("origin"));
+  const origin: Origin = (ORIGINS as readonly string[]).includes(originRaw) ? (originRaw as Origin) : "editor";
+  const verificationRaw = str(form.get("verification"));
+  const verification: Verification = (VERIFICATIONS as readonly string[]).includes(verificationRaw)
+    ? (verificationRaw as Verification)
+    : "source";
+  const verificationNote = opt(form.get("verificationNote"));
+  if (verificationNote && verificationNote.length > NOTE_MAX)
+    errors.verificationNote = `Doğrulama notu en fazla ${NOTE_MAX} karakter olmalı.`;
+
+  const extra = str(form.get("extraSources"))
+    .split(/\s+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (extra.some((u) => !isHttpUrl(u))) errors.extraSources = "Ek kaynaklar geçerli bağlantılar olmalı (her satıra bir tane).";
+  else if (extra.length > EXTRA_SOURCES_MAX) errors.extraSources = `En fazla ${EXTRA_SOURCES_MAX} ek kaynak eklenebilir.`;
+  if (verification === "verified" && extra.length === 0)
+    errors.verification = "\"Doğrulandı\" için ana kaynağa ek olarak en az bir bağımsız kaynak ekleyin.";
 
   if (Object.keys(errors).length) return { ok: false, errors };
   return {
@@ -85,6 +121,12 @@ export function validateStoryForm(form: FormData): ValidationResult {
       isSponsored,
       sponsorName: isSponsored ? sponsorName : null,
       sponsorUrl: isSponsored ? sponsorUrl : null,
+      origin,
+      submitterName: origin === "reader" ? opt(form.get("submitterName")) : null,
+      verification,
+      verificationNote,
+      extraSources: extra.length ? [...new Set(extra)].join("\n") : null,
+      aiAssisted: form.get("aiAssisted") === "on",
     },
   };
 }

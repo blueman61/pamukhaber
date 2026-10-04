@@ -29,7 +29,23 @@ export default function AboutPage() {
           <li>Her haberi kendi cümlelerimizle kısaca özetliyor, orijinal kaynağa bağlantı veriyoruz.</li>
           <li>Tık tuzağı, abartı ve &quot;her şey harika&quot; yapaylığı yok. Gerçek, doğrulanabilir hikâyeler.</li>
           <li>Sponsorlu içerikler her zaman açıkça &quot;Sponsorlu&quot; olarak işaretlenir.</li>
+          <li>
+            Yapay zekâyı yalnızca editörlerimize taslak hazırlamak için kullanıyoruz; her haber yayından önce bir insan
+            tarafından okunup onaylanır.
+          </li>
         </ul>
+      </section>
+
+      <section className="mt-6 space-y-3 rounded-3xl border border-border bg-card p-5">
+        <h2 className="text-lg font-bold">Şeffaflık</h2>
+        <p className="text-[15px] leading-relaxed">
+          Her haberin sağındaki <b>yuvarlak içinde nokta</b> düğmesine dokunarak kaynağını, doğrulanıp doğrulanmadığını
+          ve haberi kimin gönderdiğini görebilirsin. Yanlış ya da sahte olduğunu düşündüğün bir haberi aynı yerden
+          bildirebilirsin; birden fazla okur bildirirse haber editör incelemesine kadar yayından kalkar.
+        </p>
+        <Link href="/gonder" className="inline-block rounded-2xl bg-accent-soft px-5 py-3 font-bold">
+          💌 Güzel bir haber gönder
+        </Link>
       </section>
 
       <section className="mt-6 space-y-3 rounded-3xl border border-border bg-card p-5">

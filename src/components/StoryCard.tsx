@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { getCategory } from "@/lib/categories";
+import { isEmbedType, PLATFORM_LABELS } from "@/lib/media";
 import type { FeedStory } from "@/lib/stories";
-import { ExternalIcon, HeartIcon, ShareIcon, VolumeIcon } from "./icons";
+import { DotIcon, ExternalIcon, HeartIcon, ShareIcon, VolumeIcon } from "./icons";
+import { StoryInfoSheet } from "./StoryInfoSheet";
 import { StoryMedia } from "./StoryMedia";
 
 type Props = {
@@ -18,6 +20,8 @@ type Props = {
 
 export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, onToast }: Props) {
   const [burst, setBurst] = useState(0);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const closeInfo = useCallback(() => setInfoOpen(false), []);
   const category = getCategory(story.category);
   const isVideo = story.mediaType === "video";
   const outbound = story.isSponsored ? story.sponsorUrl : story.sourceUrl;
@@ -66,6 +70,9 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
                 {category.emoji} {category.label}
               </span>
             )}
+            {isEmbedType(story.mediaType) && (
+              <span className="rounded-full bg-black/40 px-2.5 py-1 backdrop-blur-md">▶ {PLATFORM_LABELS[story.mediaType]}</span>
+            )}
             {story.isDemo && (
               <span className="rounded-full bg-sky-200/90 px-2.5 py-1 text-sky-950">Örnek içerik</span>
             )}
@@ -107,6 +114,18 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
             </span>
             Paylaş
           </button>
+          <button
+            type="button"
+            onClick={() => setInfoOpen(true)}
+            aria-label="Haber bilgisi ve bildirim"
+            aria-haspopup="dialog"
+            className="flex flex-col items-center gap-1 text-xs font-semibold"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
+              <DotIcon className="h-7 w-7" />
+            </span>
+            Bilgi
+          </button>
           {isVideo && (
             <button
               type="button"
@@ -119,6 +138,7 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
           )}
         </div>
       </div>
+      {infoOpen && <StoryInfoSheet story={story} onClose={closeInfo} />}
     </article>
   );
 }

@@ -26,6 +26,9 @@ export function EndCard({ empty }: { empty?: boolean }) {
             ☕ Pamuk Haber&apos;e destek ol
           </a>
         )}
+        <Link href="/gonder" className="rounded-2xl bg-white px-6 py-3 font-bold shadow-md">
+          💌 Güzel bir haber gönder
+        </Link>
         <Link href="/hakkinda" className="text-sm font-semibold text-[#8a7a86] underline underline-offset-4">
           Biz kimiz?
         </Link>

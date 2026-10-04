@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { candidates, sources, stories } from "@/db/schema";
+import { isAiConfigured } from "@/lib/ai";
 import { requireAdmin } from "@/lib/auth";
 import { StoryForm, type StoryFormDefaults } from "./StoryForm";
 
@@ -20,13 +21,33 @@ const EMPTY: StoryFormDefaults = {
   isSponsored: false,
   sponsorName: "",
   sponsorUrl: "",
+  origin: "editor",
+  submitterName: "",
+  verification: "source",
+  verificationNote: "",
+  extraSources: "",
+  aiAssisted: false,
 };
+
+function hostOf(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
 
 export default async function NewStoryPage({ searchParams }: PageProps<"/admin/yeni">) {
   await requireAdmin();
   const { aday, hikaye } = await searchParams;
   let defaults = EMPTY;
-  let original: { title: string; excerpt: string; url: string; source: string | null } | null = null;
+  let original: {
+    title: string;
+    excerpt: string;
+    url: string;
+    source: string | null;
+    reader: { name: string | null; email: string | null; note: string | null } | null;
+  } | null = null;
 
   if (typeof hikaye === "string") {
     const [s] = await db.select().from(stories).where(eq(stories.id, Number(hikaye))).limit(1);
@@ -44,6 +65,12 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
       isSponsored: s.isSponsored,
       sponsorName: s.sponsorName ?? "",
       sponsorUrl: s.sponsorUrl ?? "",
+      origin: s.origin,
+      submitterName: s.submitterName ?? "",
+      verification: s.verification,
+      verificationNote: s.verificationNote ?? "",
+      extraSources: s.extraSources ?? "",
+      aiAssisted: s.aiAssisted,
     };
   } else if (typeof aday === "string") {
     const [row] = await db
@@ -54,8 +81,15 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
       .limit(1);
     if (!row) notFound();
     const { c, source } = row;
-    const turkish = source?.lang === "tr";
-    original = { title: c.title, excerpt: c.excerpt, url: c.url, source: source?.name ?? null };
+    const turkish = source?.lang === "tr" || c.origin === "reader";
+    const fromReader = c.origin === "reader";
+    original = {
+      title: c.title,
+      excerpt: fromReader ? "" : c.excerpt,
+      url: c.url,
+      source: fromReader ? "Okur gönderimi" : (source?.name ?? null),
+      reader: fromReader ? { name: c.submitterName, email: c.submitterEmail, note: c.submitterNote } : null,
+    };
     defaults = {
       ...EMPTY,
       candidateId: c.id,
@@ -64,8 +98,10 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
       mediaType: c.imageUrl ? "image" : "none",
       mediaUrl: c.imageUrl ?? "",
       mediaCredit: c.imageUrl && source ? source.name : "",
-      sourceName: source?.name ?? "",
+      sourceName: source?.name ?? (fromReader ? hostOf(c.url) : ""),
       sourceUrl: c.url,
+      origin: fromReader ? "reader" : "editor",
+      submitterName: c.submitterName ?? "",
     };
   }
 
@@ -83,6 +119,19 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
             {original.title} ↗
           </a>
           {original.excerpt && <p className="mt-2 text-sm text-muted">{original.excerpt}</p>}
+          {original.reader && (
+            <div className="mt-3 rounded-2xl bg-accent-soft px-3 py-2 text-sm">
+              <p className="font-semibold">
+                💌 Okurun notu{original.reader.name ? ` · ${original.reader.name} (adıyla anılabilir)` : " · anonim"}
+              </p>
+              <p className="mt-1">{original.reader.note}</p>
+              {original.reader.email && (
+                <p className="mt-1 text-xs text-muted">
+                  İletişim (yayınlanmaz): <a href={`mailto:${original.reader.email}`}>{original.reader.email}</a>
+                </p>
+              )}
+            </div>
+          )}
           <p className="mt-3 text-xs text-muted">
             Metni kopyalama: haberi okuyup kendi cümlelerinle, Türkçe ve kısa özetle. Kaynak bağlantısı otomatik eklenir.
           </p>
@@ -90,7 +139,7 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
       )}
 
       <div className="mt-6">
-        <StoryForm defaults={defaults} />
+        <StoryForm defaults={defaults} aiEnabled={isAiConfigured()} />
       </div>
     </main>
   );

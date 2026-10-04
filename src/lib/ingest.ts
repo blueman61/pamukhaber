@@ -4,7 +4,7 @@ import type { Db } from "@/db";
 import { candidates, sources, type Source } from "@/db/schema";
 import { scorePositivity } from "./positivity";
 
-type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
+export type FetchLike = (url: string, init?: RequestInit) => Promise<Response>;
 
 type MediaNode = { $?: { url?: string; medium?: string; type?: string } };
 type FeedItem = {
@@ -92,6 +92,17 @@ export function findOgImage(html: string): string | null {
   return null;
 }
 
+export function findOgTitle(html: string): string | null {
+  for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+    if (/(property|name)=["'](og:title|twitter:title)["']/i.test(tag)) {
+      const content = tag.match(/content=["']([^"']+)["']/i)?.[1];
+      if (content) return stripHtml(content);
+    }
+  }
+  const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
+  return title ? stripHtml(title) || null : null;
+}
+
 /** Ham RSS öğelerini aday kayıtlarına dönüştürür (tekilleştirme dahil). */
 export function itemsToCandidates(items: FeedItem[], sourceId: number | null): NewCandidate[] {
   const seen = new Set<string>();
@@ -116,7 +127,7 @@ export function itemsToCandidates(items: FeedItem[], sourceId: number | null): N
   return out;
 }
 
-async function fetchText(url: string, fetchImpl: FetchLike): Promise<string> {
+export async function fetchText(url: string, fetchImpl: FetchLike = fetch): Promise<string> {
   const res = await fetchImpl(url, {
     headers: { "user-agent": USER_AGENT, accept: "application/rss+xml, application/xml, text/html, */*" },
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
