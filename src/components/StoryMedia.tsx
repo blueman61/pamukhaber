@@ -1,16 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { buildScene } from "@/remotion/scene-data";
+import { useIsScene } from "./useScene";
 import { isCategory } from "@/lib/categories";
 import { CategoryArt } from "./CategoryArt";
 import { embedSrc, isEmbedType, PLATFORM_LABELS, youtubeId, youtubeThumbnail, type EmbedType } from "@/lib/media";
 import type { FeedStory } from "@/lib/stories";
+
+const StoryScene = dynamic(() => import("@/remotion/StoryScene"), { ssr: false });
 
 type Props = { story: FeedStory; active: boolean; muted: boolean };
 
 /** Kartın tam ekran arka planı: görsel, video, gömülü platform videosu ya da pastel degrade. */
 export function StoryMedia({ story, active, muted }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isScene = useIsScene(story);
+  const scene = useMemo(() => (isScene ? buildScene(story) : null), [isScene, story]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -42,23 +49,86 @@ export function StoryMedia({ story, active, muted }: Props) {
   }
 
   if (story.mediaType === "image" && story.mediaUrl) {
+    return <ImageMedia story={story} active={active} />;
+  }
+
+  if (scene) {
+    // Etkin olmayan kartlar illüstrasyon posterini gösterir; yalnızca etkin kart oynatıcıyı bağlar.
     return (
       <>
-        {/* Dikey olmayan görselleri bulanık bir zeminle doldur. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={story.mediaUrl} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={story.mediaUrl}
-          alt={story.title}
-          className="absolute inset-0 h-full w-full object-contain sm:object-cover"
-          loading={active ? "eager" : "lazy"}
-        />
+        <PastelBackground category={story.category} seed={story.id} />
+        {active && <StoryScene key={story.id} scene={scene} />}
       </>
     );
   }
 
   return <PastelBackground category={story.category} seed={story.id} />;
+}
+
+/**
+ * Görsel, metin panelinin üstündeki boş alana kırpılmadan sığar (panel yüksekliği --panel-h ile gelir).
+ * Dokununca tam ekran görüntüleyici açılır; çift dokunma beğeni olarak kartta kalır.
+ */
+function ImageMedia({ story, active }: { story: FeedStory; active: boolean }) {
+  const [open, setOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
+
+  function onTap(e: React.MouseEvent) {
+    if (timer.current) clearTimeout(timer.current);
+    if (e.detail > 1) return; // çift dokunma: beğeni
+    timer.current = setTimeout(() => setOpen(true), 260);
+  }
+
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={story.mediaUrl!} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl" />
+      <div className="absolute inset-0 bg-black/10" />
+      <button
+        type="button"
+        data-image-open
+        onClick={onTap}
+        aria-label={`Görseli büyüt: ${story.title}`}
+        className="absolute inset-x-0 top-[4.5rem] bottom-[var(--panel-h,42%)] cursor-zoom-in p-2"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={story.mediaUrl!}
+          alt={story.title}
+          className="h-full w-full rounded-2xl object-contain drop-shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+          loading={active ? "eager" : "lazy"}
+        />
+      </button>
+      {open && <ImageViewer src={story.mediaUrl!} alt={story.title} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function ImageViewer({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div role="dialog" aria-modal="true" aria-label={alt} className="animate-fade fixed inset-0 z-50 flex flex-col bg-black/95">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Kapat"
+        className="absolute top-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-xl font-black text-white"
+      >
+        ✕
+      </button>
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto [touch-action:pinch-zoom_pan-x_pan-y]" onClick={onClose}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt} className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
+      </div>
+    </div>
+  );
 }
 
 function PastelBackground({ category, seed, label }: { category: string; seed: number; label?: string }) {

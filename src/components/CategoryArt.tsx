@@ -81,7 +81,7 @@ export function CategoryArt({ motif, seed = 0, focusY = 0.4, className = "absolu
   );
 }
 
-function Cloud({ x, y, s = 1, o = 0.92 }: { x: number; y: number; s?: number; o?: number }) {
+export function Cloud({ x, y, s = 1, o = 0.92 }: { x: number; y: number; s?: number; o?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`} fill="#fff" opacity={o}>
       <circle cx="22" cy="12" r="20" />
@@ -94,7 +94,7 @@ function Cloud({ x, y, s = 1, o = 0.92 }: { x: number; y: number; s?: number; o?
 
 const HEART = "M0 42 C -64 2, -54 -56, 0 -24 C 54 -56, 64 2, 0 42 Z";
 
-function Motif({ motif, color, light, seed, uid }: { motif: ArtMotif; color: string; light: string; seed: number; uid: string }) {
+export function Motif({ motif, color, light, seed, uid }: { motif: ArtMotif; color: string; light: string; seed: number; uid: string }) {
   switch (motif) {
     case "hayvanlar":
       return (
@@ -243,7 +243,7 @@ function Paw() {
   );
 }
 
-function Star({ x, y, r, fill, opacity }: { x: number; y: number; r: number; fill: string; opacity?: number }) {
+export function Star({ x, y, r, fill, opacity }: { x: number; y: number; r: number; fill: string; opacity?: number }) {
   const pts = Array.from({ length: 10 }, (_, i) => {
     const a = (Math.PI / 5) * i - Math.PI / 2;
     const rad = i % 2 === 0 ? r : r * 0.45;

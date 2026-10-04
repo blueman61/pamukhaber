@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getCategory, isCategory } from "@/lib/categories";
 import { isEmbedType, PLATFORM_LABELS } from "@/lib/media";
 import type { FeedStory } from "@/lib/stories";
 import { DotIcon, ExternalIcon, HeartIcon, ShareIcon, VolumeIcon } from "./icons";
 import { StoryInfoSheet } from "./StoryInfoSheet";
 import { StoryMedia } from "./StoryMedia";
+import { useIsScene } from "./useScene";
 
 type Props = {
   story: FeedStory;
@@ -21,10 +22,26 @@ type Props = {
 export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, onToast }: Props) {
   const [burst, setBurst] = useState(0);
   const [infoOpen, setInfoOpen] = useState(false);
+  const articleRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const closeInfo = useCallback(() => setInfoOpen(false), []);
+  const isScene = useIsScene(story);
   const category = getCategory(story.category);
   const isVideo = story.mediaType === "video";
   const outbound = story.isSponsored ? story.sponsorUrl : story.sourceUrl;
+
+  // Görsel kartında görsel, panelin üstündeki alana sığsın diye panel yüksekliğini ölçer.
+  useEffect(() => {
+    // Son çocuk metin paneli; beğeni rayı görselin üstüne binebilir.
+    const panel = panelRef.current?.lastElementChild as HTMLElement | null | undefined;
+    const article = articleRef.current;
+    if (!panel || !article || story.mediaType !== "image") return;
+    const update = () => article.style.setProperty("--panel-h", `${panel.offsetHeight + 20}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(panel);
+    return () => observer.disconnect();
+  }, [story.mediaType]);
 
   async function share() {
     const url = `${window.location.origin}/h/${story.slug}`;
@@ -98,6 +115,7 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
 
   return (
     <article
+      ref={articleRef}
       data-active={active}
       className="group relative h-full w-full overflow-hidden bg-background select-none"
       onDoubleClick={doubleTapLike}
@@ -118,7 +136,7 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
         />
       )}
 
-      <div className="absolute inset-x-0 bottom-0 flex flex-col items-end gap-3 px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
+      <div ref={panelRef} className="absolute inset-x-0 bottom-0 flex flex-col items-end gap-3 px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
         <div className={`${hasMedia ? "glass-dark" : "glass"} flex flex-col items-center gap-1 rounded-full p-1.5 shadow-float`}>
           <RailButton
             label={liked ? "Beğeniyi geri al" : "Beğen"}
@@ -153,7 +171,9 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
           )}
         </div>
 
-        {videoFirst ? (
+        {isScene ? (
+          <SceneStrip chips={chips} story={story} outbound={outbound} sourceLabel={sourceLabel} chipTone={chipTone} />
+        ) : videoFirst ? (
           <VideoCaption key={String(active)} active={active} chips={chips} title={story.title} accent={category.color}>
             {fullText}
           </VideoCaption>
@@ -170,6 +190,41 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
       </div>
       {infoOpen && <StoryInfoSheet story={story} onClose={closeInfo} />}
     </article>
+  );
+}
+
+/** Sahne kartının alt şeridi: metin sahnenin içinde olduğundan yalnızca kaynak bağlantısı kalır. */
+function SceneStrip({
+  story,
+  outbound,
+  sourceLabel,
+  chipTone,
+}: {
+  chips: React.ReactNode;
+  story: FeedStory;
+  outbound: string | null;
+  sourceLabel: string;
+  chipTone: string;
+}) {
+  return (
+    <>
+      <div className="sr-only">
+        <h2>{story.title}</h2>
+        <p>{story.summary}</p>
+      </div>
+      {outbound && (
+        <a
+          href={outbound}
+          target="_blank"
+          rel="noopener"
+          data-scene-source
+          className={`glass chip max-w-[78%] self-start shadow-float ${chipTone} hover:opacity-90`}
+        >
+          <ExternalIcon className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{sourceLabel}</span>
+        </a>
+      )}
+    </>
   );
 }
 
