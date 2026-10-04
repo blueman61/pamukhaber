@@ -40,7 +40,7 @@ export default function AboutPage() {
   const supportUrl = process.env.NEXT_PUBLIC_SUPPORT_URL;
   const contact = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
   return (
-    <main className="mx-auto min-h-dvh max-w-[480px] pb-12">
+    <main className="mx-auto min-h-dvh max-w-[480px] pb-12 lg:max-w-4xl">
       <PageHero
         motif="iyilik"
         eyebrow="Hakkında"
@@ -53,8 +53,8 @@ export default function AboutPage() {
         }
       />
 
-      <div className="mt-4 space-y-4 px-4">
-        <section className="card p-5">
+      <div className="mt-4 space-y-4 px-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 lg:px-10">
+        <section className="card p-5 lg:row-span-2">
           <h2 className="display text-[20px]">Haberleri nasıl seçiyoruz?</h2>
           <ul className="mt-4 space-y-3">
             {PRINCIPLES.map((p) => (
@@ -93,7 +93,7 @@ export default function AboutPage() {
         </section>
 
         {contact && (
-          <p className="px-2 text-center text-sm text-muted">
+          <p className="px-2 text-center text-sm text-muted lg:col-span-2">
             Güzel bir haber mi gördün, ya da markanla bize sponsor olmak mı istiyorsun?{" "}
             <a href={`mailto:${contact}`} className="font-extrabold text-accent underline">
               {contact}

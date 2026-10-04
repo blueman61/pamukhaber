@@ -1,0 +1,8 @@
+# Netlify yayın ayarları. Ayrıntılı kurulum: docs/YAYINLAMA.md
+[build]
+  # Her yayında veritabanı tabloları güncellenir ve (boşsa) örnek içerik eklenir.
+  command = "npm run setup && npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"

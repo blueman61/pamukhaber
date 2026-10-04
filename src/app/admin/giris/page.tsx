@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CategoryArt } from "@/components/CategoryArt";
 import { Logo } from "@/components/Logo";
+import { PhoneFrame } from "@/components/PhoneFrame";
 import { isAuthConfigured } from "@/lib/session";
 import { LoginForm } from "./LoginForm";
 
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <main className="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden">
+    <PhoneFrame motif="mail">
       <CategoryArt motif="mail" focusY={0.26} />
       <div className="absolute inset-x-0 bottom-0 px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
         <div className="glass rounded-[30px] p-6 shadow-float">
@@ -24,6 +25,6 @@ export default function LoginPage() {
           <LoginForm />
         </div>
       </div>
-    </main>
+    </PhoneFrame>
   );
 }

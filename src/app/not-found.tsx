@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { CategoryArt } from "@/components/CategoryArt";
+import { PhoneFrame } from "@/components/PhoneFrame";
 
 export default function NotFound() {
   return (
-    <main className="relative mx-auto h-dvh max-w-[480px] overflow-hidden">
+    <PhoneFrame motif="moon">
       <CategoryArt motif="moon" focusY={0.34} />
       <div className="absolute inset-x-0 bottom-0 px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
         <div className="glass rounded-[30px] p-6 text-center shadow-float">
@@ -14,6 +15,6 @@ export default function NotFound() {
           </Link>
         </div>
       </div>
-    </main>
+    </PhoneFrame>
   );
 }

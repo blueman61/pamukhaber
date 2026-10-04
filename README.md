@@ -73,9 +73,14 @@ tests/                     Vitest birim/entegrasyon testleri
 - **Yapay zekâ (Gemini):** `GEMINI_API_KEY` tanımlıysa hikâye formunda iki düğme çıkar: *Taslak* (haber sayfasını okuyup Türkçe başlık/özet/kategori, teyit edilmesi gereken iddialar ve uyarılar önerir) ve *Başka kaynaklarda ara* (Google Search grounding ile bağımsız kaynak arar). Çıktı yalnızca öneridir; yayın kararı editördedir ve okura "yapay zekâ desteğiyle hazırlandı" bilgisi gösterilir. Model `GEMINI_MODEL` ile değiştirilebilir.
 - **Kötüye kullanım önlemleri:** Bildirim ve okur gönderimlerinde kişiyi ayırt etmek için IP + tarayıcı bilgisi gizli tuzla tek yönlü özetlenir (ham hâli saklanmaz). Okur gönderimlerinde günde 5 sınır ve bal küpü alanı; sunucu, okurun verdiği adresi çekmeden önce yerel ağ/IP adreslerini reddeder (SSRF koruması).
 - **Tasarım ("Pamuk Bulut"):** Nunito yazı tipi (`@fontsource-variable/nunito`, derlemede ağ gerektirmez), `globals.css`'teki renk token'ları ve ortak sınıflar (`.card`, `.glass`, `.btn-*`, `.input`, `.chip`, `.choice`), medyasız haberler için kategoriye özel SVG illüstrasyonlar (`components/CategoryArt.tsx`), açık/karanlık mod.
+- **Masaüstü düzeni (≥1024px):** solda logo ve kategoriler, ortada telefon çerçevesinde kayan akış ve yukarı/aşağı düğmeleri, geniş ekranda (≥1280px) sağda bülten / haber gönder / klavye ipuçları. ↑ ↓, J/K, PageUp/PageDown ve boşlukla gezinme; arka plan aktif haberin kategorisine göre değişir.
 - **Kimlik doğrulama:** Tek editör şifresi (`ADMIN_PASSWORD`), `AUTH_SECRET` ile imzalı HttpOnly JWT çerezi. Sunucu eylemleri oturumu ayrıca doğrular.
 
-## Canlıya alma (Vercel + Turso)
+## Canlıya alma
+
+**Adım adım, ücretsiz kurulum (Netlify + Turso): [docs/YAYINLAMA.md](docs/YAYINLAMA.md)** — `netlify.toml` derlemede veritabanı tablolarını otomatik kurar ve (boşsa) örnek içerik ekler.
+
+### Alternatif: Vercel + Turso
 
 1. Turso'da veritabanı oluşturun: `turso db create pamukhaber`, URL ve token alın.
 2. Yerelden migration ve seed: `DATABASE_URL=libsql://... DATABASE_AUTH_TOKEN=... npm run setup`

@@ -75,7 +75,7 @@ export function StoryInfoSheet({ story, onClose }: Props) {
 
   return createPortal(
     <div
-      className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-[#2e2433]/45 backdrop-blur-[2px]"
+      className="animate-fade fixed inset-0 z-50 flex items-end justify-center bg-[#2e2433]/45 backdrop-blur-[2px] lg:items-center lg:p-6"
       onClick={onClose}
       onDoubleClick={(e) => e.stopPropagation()}
     >
@@ -84,7 +84,7 @@ export function StoryInfoSheet({ story, onClose }: Props) {
         aria-modal="true"
         aria-labelledby={`info-${story.id}`}
         onClick={(e) => e.stopPropagation()}
-        className="animate-sheet max-h-[86dvh] w-full max-w-[480px] overflow-y-auto rounded-t-[34px] bg-background px-5 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-foreground shadow-float"
+        className="animate-sheet max-h-[86dvh] w-full max-w-[480px] overflow-y-auto rounded-t-[34px] bg-background px-5 pt-3 lg:max-w-[520px] lg:rounded-[34px] lg:pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-foreground shadow-float"
       >
         <div className="mx-auto mb-4 h-1.5 w-11 rounded-full bg-border" aria-hidden />
 

@@ -6,7 +6,7 @@ import { Logo } from "./Logo";
 export function TopBar({ active }: { active: string | null }) {
   const tabs = [{ slug: null, label: "Tümü", color: null }, ...CATEGORIES];
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 pt-[max(0.7rem,env(safe-area-inset-top))]">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 pt-[max(0.7rem,env(safe-area-inset-top))] lg:hidden">
       <div className="pointer-events-auto flex items-center justify-between gap-2 px-3">
         <Link href="/" aria-label="Pamuk Haber ana sayfa" className="glass rounded-full py-1.5 pr-4 pl-1.5 shadow-soft">
           <Logo />

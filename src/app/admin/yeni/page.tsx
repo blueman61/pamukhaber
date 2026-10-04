@@ -106,7 +106,7 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="mx-auto max-w-2xl px-4 py-6 lg:max-w-3xl">
       <Link href="/admin" className="btn btn-sm btn-ghost">
         ← Editör masası
       </Link>
