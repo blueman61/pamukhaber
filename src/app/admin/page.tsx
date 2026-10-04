@@ -179,6 +179,7 @@ async function QueueTab() {
 async function PublishedTab() {
   const rows = await db.select().from(stories).orderBy(desc(stories.id)).limit(100);
   const hasDemo = rows.some((s) => s.isDemo);
+  const repo = (await getSettings()).github_repo.trim();
   return (
     <section>
       <div className="flex flex-wrap gap-2">
@@ -220,6 +221,17 @@ async function PublishedTab() {
                 <Link href={`/admin/yeni?hikaye=${s.id}`} className={`${btn} btn-ghost`}>
                   Düzenle
                 </Link>
+                {repo && s.mediaType === "none" && !s.isSponsored && s.status === "published" && (
+                  <a
+                    href={`https://github.com/${repo}/actions/workflows/video.yml`}
+                    target="_blank"
+                    rel="noopener"
+                    title={`Run workflow → slug: ${s.slug}`}
+                    className={`${btn} btn-ghost`}
+                  >
+                    🎬 MP4 hazırla
+                  </a>
+                )}
                 <form action={setStoryStatus}>
                   <input type="hidden" name="id" value={s.id} />
                   <input type="hidden" name="status" value={s.status === "published" ? "hidden" : "published"} />

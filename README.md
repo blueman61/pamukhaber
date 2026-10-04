@@ -77,9 +77,15 @@ tests/                     Vitest birim/entegrasyon testleri
 - **Masaüstü düzeni (≥1024px):** solda logo ve kategoriler, ortada telefon çerçevesinde kayan akış ve yukarı/aşağı düğmeleri, geniş ekranda (≥1280px) sağda bülten / haber gönder / klavye ipuçları. ↑ ↓, J/K, PageUp/PageDown ve boşlukla gezinme; arka plan aktif haberin kategorisine göre değişir.
 - **Kimlik doğrulama:** Tek editör şifresi (`ADMIN_PASSWORD`), `AUTH_SECRET` ile imzalı HttpOnly JWT çerezi. Sunucu eylemleri oturumu ayrıca doğrular.
 
+- **Sahneler (Remotion):** Medyası olmayan haberler tarayıcıda canlı oynayan 9:16 videolara dönüşür (`src/remotion/`): başlık kelime kelime girer, özet 3 parçaya bölünür, her parça kendi çizimiyle (`scene-data.ts` anahtar kelimeden motif seçer) gelir. Oynatıcı yalnızca ekrandaki kartta yüklenir (`@remotion/player`); `prefers-reduced-motion` açıksa eski metin paneli gösterilir. İsteğe bağlı MP4 için `video/` paketi ve `.github/workflows/video.yml` (Actions → "Haber videosu (MP4)" → slug yazın → çıktıyı indirin) ya da yerelde `cd video && npm i && SITE_URL=https://siteniz npm run video -- <slug>` kullanılır (Chromium gerekir; `CHROME_PATH` ile belirtilebilir).
+- **Görseller:** Görselli kartlarda görsel, metin panelinin üstündeki alana kırpılmadan sığar; dokununca tam ekran açılır (Esc ile kapanır).
+- **Ayarlar:** Editör panelindeki **Ayarlar** sekmesi (destek bağlantısı, e-posta, Gemini modeli, GitHub deposu) `settings` tablosuna yazar; yeniden yayın gerektirmez.
+
+> **Remotion lisansı:** Bireyler ve en fazla 3 çalışanlı şirketler için ücretsizdir (oynatıcı dahil). 4 veya daha çok çalışanlı bir şirket olursanız Remotion şirket lisansı gerekir: https://www.remotion.dev/license
+
 ## Canlıya alma
 
-**Adım adım, ücretsiz kurulum (Netlify + Turso): [docs/YAYINLAMA.md](docs/YAYINLAMA.md)** — `netlify.toml` derlemede veritabanı tablolarını otomatik kurar ve (boşsa) örnek içerik ekler.
+**Adım adım, ücretsiz kurulum (Netlify + Turso): [docs/YAYINLAMA.md](docs/YAYINLAMA.md)** (yayın kredisi disiplini ve `yayin` dalı dahil) — `netlify.toml` derlemede veritabanı tablolarını otomatik kurar ve (boşsa) örnek içerik ekler.
 
 ### Alternatif: Vercel + Turso
 

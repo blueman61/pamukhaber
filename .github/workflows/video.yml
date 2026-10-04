@@ -1,0 +1,39 @@
+# Bir haberin sahnesini MP4'e çevirir (TikTok / Reels paylaşımı için).
+# Actions → "Haber videosu (MP4)" → Run workflow → haberin slug'ını yazın.
+# Bitince çalıştırmanın altındaki "Artifacts" bölümünden MP4'ü indirin. Ücretsizdir.
+name: Haber videosu (MP4)
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Haber adresindeki slug (pamukhaber.netlify.app/h/<slug>)"
+        required: true
+      site:
+        description: "Site adresi (boşsa SITE_URL sırrı kullanılır)"
+        required: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: video/package-lock.json
+      - name: Bağımlılıkları kur
+        working-directory: video
+        run: npm ci
+      - name: MP4 üret
+        working-directory: video
+        env:
+          SITE_URL: ${{ inputs.site || secrets.SITE_URL }}
+        run: npm run video -- "${{ inputs.slug }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: video-${{ inputs.slug }}
+          path: video/out/*.mp4
+          retention-days: 7

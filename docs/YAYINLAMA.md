@@ -11,6 +11,22 @@ Bu rehberle siteyi yaklaşık 15 dakikada, ücretsiz olarak internete açarsın�
 > - Bu yüzden her küçük değişiklikte yeniden yayınlamayın. Gerekirse 2. adımdaki "otomatik yayını durdurma" ayarını kullanın.
 > - Trafik büyüyünce Netlify'ın ücretli planına geçebilir ya da Vercel gibi başka bir servise taşıyabilirsiniz. Kodda değişiklik gerekmez.
 
+## Yayın kredisini koruma (önerilen düzen)
+
+Netlify panelinizde gördüğünüz kredi toplamı (ör. 100) her **yayın**da 15 azalır; yani toplam 100 ise ayda yaklaşık **6 yayın** yapabilirsiniz. Bunu şöyle yönetiyoruz:
+
+1. **Ayrı `yayin` dalı (bir kerelik ayar).** Netlify'da *Site configuration → Build & deploy → Branches and deploy contexts* bölümünde:
+   - **Production branch:** `yayin`
+   - **Branch deploys:** None
+   - **Deploy Previews:** Off
+
+   Böylece geliştirme dalına yapılan hiçbir gönderim yayın başlatmaz. Değişiklikler birikir; "yayına al" dediğinizde `yayin` dalı güncellenir ve **tek yayın (15 kredi)** olur.
+2. **Atlanan derlemeler kredi harcamaz.** `netlify.toml` içindeki `ignore` komutu; yalnızca uygulama dosyaları (`src`, `public`, `drizzle`, `scripts`, `video`, paket ve yapılandırma dosyaları) değişmişse derleme yapar. Belge, test ve ekran görüntüsü değişiklikleri yayını atlar.
+3. **İçerik ve ayar işleri yayın gerektirmez.** Haber ekleme, kaynak ekleme/silme ve **Ayarlar** sekmesi (destek bağlantısı, iletişim e-postası, Gemini modeli, GitHub deposu) doğrudan veritabanına yazılır; anında geçerli olur.
+4. **Alışkanlık:** Kod değişikliklerini biriktirin, ayda en çok birkaç kez yayınlayın.
+
+Başka bir hizmete (ör. Vercel) geçmek isterseniz: [TASINMA-VERCEL.md](TASINMA-VERCEL.md).
+
 ---
 
 ## 1. Turso veritabanını oluşturun
