@@ -63,16 +63,15 @@ const VERIFICATION_LABELS: Record<Verification, string> = {
   unverified: "⏳ Doğrulanmadı",
 };
 
-const input =
-  "w-full rounded-2xl border border-border bg-card px-4 py-3 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft";
-const smallBtn = "rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 disabled:opacity-50";
+const input = "input";
+const smallBtn = "btn btn-sm";
 
 function Field({ label, error, hint, children }: { label: string; error?: string; hint?: React.ReactNode; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1.5 flex justify-between gap-3 text-sm font-semibold">
+      <span className="label">
         {label}
-        {hint && <span className="font-normal text-muted">{hint}</span>}
+        {hint && <span className="font-semibold text-muted">{hint}</span>}
       </span>
       {children}
       {error && <span className="mt-1 block text-sm text-rose-600">{error}</span>}
@@ -143,7 +142,7 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
       {aiAssisted && <input type="hidden" name="aiAssisted" value="on" />}
 
       {aiEnabled && (
-        <section className="space-y-3 rounded-3xl border border-violet-200 bg-violet-50 p-4 text-[#3b2f3a] dark:border-violet-900 dark:bg-violet-950/40 dark:text-foreground">
+        <section className="space-y-3 rounded-[28px] border border-violet-200 bg-violet-50 p-5 shadow-soft text-[#3b2f3a] dark:border-violet-900 dark:bg-violet-950/40 dark:text-foreground">
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={runDraft} disabled={aiPending} className={`${smallBtn} bg-violet-500 text-white`}>
               {aiPending ? "Çalışıyor…" : "✨ Yapay zekâ ile taslak"}
@@ -232,8 +231,8 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
         </select>
       </Field>
 
-      <fieldset className="space-y-3 rounded-3xl border border-border p-4">
-        <legend className="px-1 text-sm font-semibold">Görsel / video</legend>
+      <fieldset className="card space-y-3 p-5 [&>:not(legend)]:clear-both">
+        <legend className="float-left mb-3 w-full text-base font-black">Görsel / video</legend>
         <select name="mediaType" value={mediaType} onChange={(e) => setMediaType(e.target.value as MediaType)} className={input}>
           {(Object.keys(MEDIA_LABELS) as MediaType[]).map((m) => (
             <option key={m} value={m}>
@@ -260,8 +259,8 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
         )}
       </fieldset>
 
-      <fieldset className="space-y-3 rounded-3xl border border-border p-4">
-        <legend className="px-1 text-sm font-semibold">Kaynak ve doğrulama</legend>
+      <fieldset className="card space-y-3 p-5 [&>:not(legend)]:clear-both">
+        <legend className="float-left mb-3 w-full text-base font-black">Kaynak ve doğrulama</legend>
         <Field label="Kaynak adı">
           <input name="sourceName" defaultValue={defaults.sourceName} className={input} />
         </Field>
@@ -310,8 +309,8 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
         </Field>
       </fieldset>
 
-      <fieldset className="space-y-3 rounded-3xl border border-border p-4">
-        <legend className="px-1 text-sm font-semibold">Haberi kim getirdi?</legend>
+      <fieldset className="card space-y-3 p-5 [&>:not(legend)]:clear-both">
+        <legend className="float-left mb-3 w-full text-base font-black">Haberi kim getirdi?</legend>
         <select name="origin" value={origin} onChange={(e) => setOrigin(e.target.value as Origin)} className={input}>
           {(Object.keys(ORIGIN_LABELS) as Origin[]).map((o) => (
             <option key={o} value={o}>
@@ -326,7 +325,7 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
         )}
       </fieldset>
 
-      <fieldset className="space-y-3 rounded-3xl border border-border p-4">
+      <fieldset className="card space-y-3 p-5 [&>:not(legend)]:clear-both">
         <label className="flex items-center gap-3 text-sm font-semibold">
           <input
             type="checkbox"
@@ -354,12 +353,12 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
           ✨ Bu hikâye yapay zekâ desteğiyle hazırlandı; okurlara bilgi panelinde belirtilecek.
         </p>
       )}
-      {state.message && <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{state.message}</p>}
+      {state.message && <p className="rounded-[20px] bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{state.message}</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-2xl bg-accent px-4 py-3.5 text-lg font-bold text-white shadow-md disabled:opacity-60"
+        className="btn btn-primary w-full py-4 text-lg"
       >
         {pending ? "Kaydediliyor…" : defaults.storyId ? "Değişiklikleri kaydet" : "Yayınla ☁️"}
       </button>

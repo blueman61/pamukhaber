@@ -1,15 +1,19 @@
 import Link from "next/link";
+import { CategoryArt } from "@/components/CategoryArt";
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-8 text-center">
-      <span className="text-7xl" aria-hidden>
-        ☁️
-      </span>
-      <h1 className="mt-6 text-2xl font-extrabold">Bu sayfa bir bulutun arkasında kaybolmuş</h1>
-      <Link href="/" className="mt-6 rounded-2xl bg-accent px-6 py-3 font-bold text-white shadow-md">
-        Güzel haberlere dön
-      </Link>
+    <main className="relative mx-auto h-dvh max-w-[480px] overflow-hidden">
+      <CategoryArt motif="moon" focusY={0.34} />
+      <div className="absolute inset-x-0 bottom-0 px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
+        <div className="glass rounded-[30px] p-6 text-center shadow-float">
+          <p className="chip mx-auto bg-accent-soft text-accent">404</p>
+          <h1 className="display mt-3 text-[26px] text-balance">Bu sayfa bir bulutun arkasında kaybolmuş</h1>
+          <Link href="/" className="btn btn-primary mt-5 w-full">
+            Güzel haberlere dön
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

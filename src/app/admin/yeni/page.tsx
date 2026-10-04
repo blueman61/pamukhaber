@@ -107,20 +107,20 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/admin" className="text-sm font-semibold text-muted">
+      <Link href="/admin" className="btn btn-sm btn-ghost">
         ← Editör masası
       </Link>
-      <h1 className="mt-4 text-2xl font-extrabold">{defaults.storyId ? "Hikâyeyi düzenle" : "Yeni hikâye"}</h1>
+      <h1 className="display mt-4 text-[28px]">{defaults.storyId ? "Hikâyeyi düzenle" : "Yeni hikâye"}</h1>
 
       {original && (
-        <aside className="mt-5 rounded-3xl border border-border bg-card p-4">
+        <aside className="card mt-5 p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">Orijinal haber · {original.source}</p>
           <a href={original.url} target="_blank" rel="noopener" className="mt-1 block font-bold hover:underline">
             {original.title} ↗
           </a>
           {original.excerpt && <p className="mt-2 text-sm text-muted">{original.excerpt}</p>}
           {original.reader && (
-            <div className="mt-3 rounded-2xl bg-accent-soft px-3 py-2 text-sm">
+            <div className="mt-3 rounded-[20px] bg-accent-soft px-4 py-3 text-sm">
               <p className="font-semibold">
                 💌 Okurun notu{original.reader.name ? ` · ${original.reader.name} (adıyla anılabilir)` : " · anonim"}
               </p>

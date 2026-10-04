@@ -2,6 +2,7 @@ import Link from "next/link";
 import { count, countDistinct, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { candidates, reports, sources, stories, subscribers } from "@/db/schema";
+import { Logo } from "@/components/Logo";
 import { requireAdmin } from "@/lib/auth";
 import { getCategory } from "@/lib/categories";
 import { reportHideThreshold, reportReasonLabel } from "@/lib/reports";
@@ -31,7 +32,7 @@ type TabId = (typeof TABS)[number]["id"];
 const dateFmt = new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const fmt = (d: Date | null) => (d ? dateFmt.format(d) : "—");
 
-const btn = "whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-semibold transition active:scale-95";
+const btn = "btn btn-sm";
 
 export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   await requireAdmin();
@@ -48,14 +49,15 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
     <main className="mx-auto max-w-3xl px-4 py-6">
       <header className="flex items-center justify-between">
         <h1 className="text-xl font-extrabold sm:text-2xl">
-          Editör masası <span aria-hidden>☁️</span>
+          <span className="sr-only">Editör masası</span>
+          <Logo />
         </h1>
         <div className="flex items-center gap-2">
-          <Link href="/" className={`${btn} bg-card`} target="_blank">
+          <Link href="/" className={`${btn} btn-ghost`} target="_blank">
             Siteyi aç ↗
           </Link>
           <form action={logout}>
-            <button className={`${btn} bg-card text-muted`}>Çıkış</button>
+            <button className={`${btn} btn-ghost text-muted`}>Çıkış</button>
           </form>
         </div>
       </header>
@@ -66,7 +68,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
             key={t.id}
             href={`/admin?tab=${t.id}`}
             aria-current={t.id === tab ? "page" : undefined}
-            className={`${btn} shrink-0 ${t.id === tab ? "bg-accent text-white shadow" : "bg-card"}`}
+            className={`${btn} shrink-0 ${t.id === tab ? "btn-primary" : "btn-ghost"}`}
           >
             {t.label}
             {t.id === "kuyruk" && queueCount > 0 && ` (${queueCount})`}
@@ -106,9 +108,9 @@ async function QueueTab() {
     <section>
       <div className="flex flex-wrap items-center gap-2">
         <form action={runIngest}>
-          <button className={`${btn} bg-foreground text-background`}>🔄 Kaynakları şimdi tara</button>
+          <button className={`${btn} btn-soft`}>🔄 Kaynakları şimdi tara</button>
         </form>
-        <Link href="/admin/yeni" className={`${btn} bg-card`}>
+        <Link href="/admin/yeni" className={`${btn} btn-ghost`}>
           ✍️ Sıfırdan hikâye yaz
         </Link>
       </div>
@@ -121,7 +123,7 @@ async function QueueTab() {
       ) : (
         <ul className="mt-5 space-y-3">
           {rows.map(({ c, sourceName }) => (
-            <li key={c.id} className="flex gap-3 rounded-3xl border border-border bg-card p-3">
+            <li key={c.id} className="flex gap-3 card p-3">
               {c.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={c.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-2xl object-cover" loading="lazy" />
@@ -151,12 +153,12 @@ async function QueueTab() {
                 </a>
                 {c.excerpt && <p className="mt-1 line-clamp-2 text-sm text-muted">{c.excerpt}</p>}
                 <div className="mt-2 flex gap-2">
-                  <Link href={`/admin/yeni?aday=${c.id}`} className={`${btn} bg-accent text-white`}>
+                  <Link href={`/admin/yeni?aday=${c.id}`} className={`${btn} btn-primary`}>
                     Düzenle ve yayınla
                   </Link>
                   <form action={rejectCandidate}>
                     <input type="hidden" name="id" value={c.id} />
-                    <button className={`${btn} bg-background text-muted`}>Reddet</button>
+                    <button className={`${btn} btn-ghost text-muted`}>Reddet</button>
                   </form>
                 </div>
               </div>
@@ -174,12 +176,12 @@ async function PublishedTab() {
   return (
     <section>
       <div className="flex flex-wrap gap-2">
-        <Link href="/admin/yeni" className={`${btn} bg-accent text-white`}>
+        <Link href="/admin/yeni" className={`${btn} btn-primary`}>
           ✍️ Yeni hikâye
         </Link>
         {hasDemo && (
           <form action={deleteDemoStories}>
-            <button className={`${btn} bg-card text-rose-600`}>Örnek içerikleri sil</button>
+            <button className={`${btn} btn-ghost text-rose-600`}>Örnek içerikleri sil</button>
           </form>
         )}
       </div>
@@ -187,7 +189,7 @@ async function PublishedTab() {
         {rows.map((s) => {
           const cat = getCategory(s.category);
           return (
-            <li key={s.id} className="rounded-3xl border border-border bg-card p-4">
+            <li key={s.id} className="card p-4">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span>
                   {cat.emoji} {cat.label}
@@ -206,20 +208,20 @@ async function PublishedTab() {
               </div>
               <p className="mt-1 font-bold">{s.title}</p>
               <div className="mt-2 flex flex-wrap gap-2">
-                <Link href={`/h/${s.slug}`} target="_blank" className={`${btn} bg-background`}>
+                <Link href={`/h/${s.slug}`} target="_blank" className={`${btn} btn-ghost`}>
                   Gör ↗
                 </Link>
-                <Link href={`/admin/yeni?hikaye=${s.id}`} className={`${btn} bg-background`}>
+                <Link href={`/admin/yeni?hikaye=${s.id}`} className={`${btn} btn-ghost`}>
                   Düzenle
                 </Link>
                 <form action={setStoryStatus}>
                   <input type="hidden" name="id" value={s.id} />
                   <input type="hidden" name="status" value={s.status === "published" ? "hidden" : "published"} />
-                  <button className={`${btn} bg-background`}>{s.status === "published" ? "Gizle" : "Yayına al"}</button>
+                  <button className={`${btn} btn-ghost`}>{s.status === "published" ? "Gizle" : "Yayına al"}</button>
                 </form>
                 <form action={deleteStory}>
                   <input type="hidden" name="id" value={s.id} />
-                  <button className={`${btn} bg-background text-rose-600`}>Sil</button>
+                  <button className={`${btn} btn-ghost text-rose-600`}>Sil</button>
                 </form>
               </div>
             </li>
@@ -255,7 +257,7 @@ async function ReportsTab() {
         {storyRows.map((s) => {
           const list = open.filter((r) => r.storyId === s.id);
           return (
-            <li key={s.id} className="rounded-3xl border border-border bg-card p-4">
+            <li key={s.id} className="card p-4">
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="rounded-full bg-rose-100 px-2 py-0.5 font-bold text-rose-800">{list.length} bildirim</span>
                 {s.status === "hidden" ? (
@@ -274,7 +276,7 @@ async function ReportsTab() {
               )}
               <ul className="mt-3 space-y-1.5">
                 {list.map((r) => (
-                  <li key={r.id} className="rounded-xl bg-background px-3 py-2 text-sm">
+                  <li key={r.id} className="rounded-2xl bg-surface-2 px-3 py-2 text-sm">
                     <span className="font-semibold">{reportReasonLabel(r.reason)}</span>
                     <span className="text-xs text-muted"> · {fmt(r.createdAt)}</span>
                     {r.note && <p className="mt-0.5 text-muted">“{r.note}”</p>}
@@ -294,7 +296,7 @@ async function ReportsTab() {
                   <input type="hidden" name="decision" value="uphold" />
                   <button className={`${btn} bg-rose-100 text-rose-900`}>Haklı — gizli tut</button>
                 </form>
-                <Link href={`/admin/yeni?hikaye=${s.id}`} className={`${btn} bg-background`}>
+                <Link href={`/admin/yeni?hikaye=${s.id}`} className={`${btn} btn-ghost`}>
                   Düzelt
                 </Link>
               </div>
@@ -308,21 +310,21 @@ async function ReportsTab() {
 
 async function SourcesTab() {
   const rows = await db.select().from(sources).orderBy(sources.name);
-  const input = "rounded-xl border border-border bg-background px-3 py-2 text-sm";
+  const input = "input py-2 text-sm";
   return (
     <section>
-      <form action={addSource} className="flex flex-wrap gap-2 rounded-3xl border border-border bg-card p-4">
+      <form action={addSource} className="flex flex-wrap gap-2 card p-4">
         <input name="name" placeholder="Kaynak adı" required className={`${input} flex-1`} />
         <input name="feedUrl" type="url" placeholder="https://…/feed" required className={`${input} flex-[2]`} />
         <select name="lang" className={input} defaultValue="tr">
           <option value="tr">Türkçe</option>
           <option value="en">İngilizce</option>
         </select>
-        <button className={`${btn} bg-accent text-white`}>Ekle</button>
+        <button className={`${btn} btn-primary`}>Ekle</button>
       </form>
       <ul className="mt-5 space-y-2">
         {rows.map((s) => (
-          <li key={s.id} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+          <li key={s.id} className="flex items-center gap-3 card p-3">
             <div className="min-w-0 flex-1">
               <p className="font-bold">
                 {s.name} <span className="text-xs font-normal text-muted">({s.lang})</span>
@@ -354,7 +356,7 @@ async function SubscribersTab() {
       <p className="text-sm text-muted">
         Bülten gönderimi için bu listeyi bir e-posta servisine (Buttondown, Mailchimp, Brevo) aktarın.
       </p>
-      <ul className="mt-4 divide-y divide-border rounded-3xl border border-border bg-card">
+      <ul className="mt-4 divide-y divide-border card">
         {rows.map((s) => (
           <li key={s.id} className="flex justify-between px-4 py-2 text-sm">
             <span>{s.email}</span>

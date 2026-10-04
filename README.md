@@ -9,9 +9,10 @@ Yalnızca güzel ve iç ısıtan haberlerin, TikTok benzeri dikey kaydırmalı k
 - **Gelir altyapısı:** Açıkça etiketli sponsorlu kartlar, bülten aboneleri, "Destek ol" bağlantısı.
 
 <p>
-  <img src="docs/ekran/akis.png" width="220" alt="Akış">
-  <img src="docs/ekran/bulten.png" width="220" alt="Bülten kartı">
-  <img src="docs/ekran/editor.png" width="220" alt="Editör paneli">
+  <img src="docs/ekran/akis.png" width="200" alt="Akış">
+  <img src="docs/ekran/bilgi.png" width="200" alt="Bilgi paneli">
+  <img src="docs/ekran/bulten.png" width="200" alt="Bülten kartı">
+  <img src="docs/ekran/karanlik.png" width="200" alt="Karanlık mod">
 </p>
 
 İçerik kaynakları, gelir modeli, operasyon ve yol haritası için: **[docs/STRATEJI.md](docs/STRATEJI.md)**
@@ -71,6 +72,7 @@ tests/                     Vitest birim/entegrasyon testleri
   - Instagram gömmeleri otomatik oynamaz (platform kısıtı). Video sahibi gömmeyi kapattıysa ya da hesap gizliyse içerik görünmez.
 - **Yapay zekâ (Gemini):** `GEMINI_API_KEY` tanımlıysa hikâye formunda iki düğme çıkar: *Taslak* (haber sayfasını okuyup Türkçe başlık/özet/kategori, teyit edilmesi gereken iddialar ve uyarılar önerir) ve *Başka kaynaklarda ara* (Google Search grounding ile bağımsız kaynak arar). Çıktı yalnızca öneridir; yayın kararı editördedir ve okura "yapay zekâ desteğiyle hazırlandı" bilgisi gösterilir. Model `GEMINI_MODEL` ile değiştirilebilir.
 - **Kötüye kullanım önlemleri:** Bildirim ve okur gönderimlerinde kişiyi ayırt etmek için IP + tarayıcı bilgisi gizli tuzla tek yönlü özetlenir (ham hâli saklanmaz). Okur gönderimlerinde günde 5 sınır ve bal küpü alanı; sunucu, okurun verdiği adresi çekmeden önce yerel ağ/IP adreslerini reddeder (SSRF koruması).
+- **Tasarım ("Pamuk Bulut"):** Nunito yazı tipi (`@fontsource-variable/nunito`, derlemede ağ gerektirmez), `globals.css`'teki renk token'ları ve ortak sınıflar (`.card`, `.glass`, `.btn-*`, `.input`, `.chip`, `.choice`), medyasız haberler için kategoriye özel SVG illüstrasyonlar (`components/CategoryArt.tsx`), açık/karanlık mod.
 - **Kimlik doğrulama:** Tek editör şifresi (`ADMIN_PASSWORD`), `AUTH_SECRET` ile imzalı HttpOnly JWT çerezi. Sunucu eylemleri oturumu ayrıca doğrular.
 
 ## Canlıya alma (Vercel + Turso)

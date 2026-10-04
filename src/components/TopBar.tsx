@@ -1,23 +1,34 @@
 import Link from "next/link";
 import { CATEGORIES } from "@/lib/categories";
+import { MailIcon } from "./icons";
+import { Logo } from "./Logo";
 
 export function TopBar({ active }: { active: string | null }) {
-  const tabs = [{ slug: null, label: "Tümü", emoji: "☁️" }, ...CATEGORIES];
+  const tabs = [{ slug: null, label: "Tümü", color: null }, ...CATEGORIES];
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 bg-gradient-to-b from-black/45 to-transparent pt-[max(0.75rem,env(safe-area-inset-top))] pb-6">
-      <div className="pointer-events-auto flex items-center justify-between px-4">
-        <Link href="/" className="text-shadow-soft text-xl font-extrabold tracking-tight text-white">
-          Pamuk Haber <span aria-hidden>☁️</span>
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-20 pt-[max(0.7rem,env(safe-area-inset-top))]">
+      <div className="pointer-events-auto flex items-center justify-between gap-2 px-3">
+        <Link href="/" aria-label="Pamuk Haber ana sayfa" className="glass rounded-full py-1.5 pr-4 pl-1.5 shadow-soft">
+          <Logo />
         </Link>
-        <Link
-          href="/hakkinda"
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-white/25 text-sm font-bold text-white backdrop-blur-md"
-          aria-label="Hakkında"
-        >
-          ?
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/gonder"
+            aria-label="Haber gönder"
+            className="glass flex h-10 w-10 items-center justify-center rounded-full shadow-soft"
+          >
+            <MailIcon className="h-5 w-5" />
+          </Link>
+          <Link
+            href="/hakkinda"
+            aria-label="Hakkında"
+            className="glass flex h-10 w-10 items-center justify-center rounded-full text-[15px] font-black shadow-soft"
+          >
+            ?
+          </Link>
+        </div>
       </div>
-      <nav aria-label="Kategoriler" className="no-scrollbar pointer-events-auto mt-3 flex gap-2 overflow-x-auto px-4">
+      <nav aria-label="Kategoriler" className="no-scrollbar fade-x pointer-events-auto mt-2.5 flex gap-1.5 overflow-x-auto px-3 pb-2">
         {tabs.map((t) => {
           const selected = (t.slug ?? null) === active;
           return (
@@ -25,11 +36,16 @@ export function TopBar({ active }: { active: string | null }) {
               key={t.slug ?? "all"}
               href={t.slug ? `/?kategori=${t.slug}` : "/"}
               aria-current={selected ? "page" : undefined}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold whitespace-nowrap backdrop-blur-md transition ${
-                selected ? "bg-white text-[#3b2f3a] shadow" : "bg-white/20 text-white"
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-[13.5px] font-extrabold whitespace-nowrap transition ${
+                selected ? "bg-foreground text-background shadow-float" : "glass text-foreground/80"
               }`}
             >
-              {t.emoji} {t.label}
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: t.color ?? "linear-gradient(135deg, #f58fb5, #a9d8ff)" }}
+                aria-hidden
+              />
+              {t.label}
             </Link>
           );
         })}

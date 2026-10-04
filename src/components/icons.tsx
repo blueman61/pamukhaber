@@ -74,3 +74,91 @@ export function CloseIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function LinkIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" />
+      <path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" />
+    </svg>
+  );
+}
+
+export function ShieldIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+export function UserIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4.5 20c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5" />
+    </svg>
+  );
+}
+
+export function CalendarIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="3" />
+      <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
+export function CameraIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H8l1.5-2h5L16 6h1.5A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z" />
+      <circle cx="12" cy="12.5" r="3.5" />
+    </svg>
+  );
+}
+
+export function SparklesIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M12 3.5 13.8 9 19.5 11 13.8 13 12 18.5 10.2 13 4.5 11 10.2 9z" />
+      <path d="M19 3v3M17.5 4.5h3" />
+    </svg>
+  );
+}
+
+export function FlagIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M5 21V4" />
+      <path d="M5 4h11l-2 4 2 4H5" />
+    </svg>
+  );
+}
+
+export function MailIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <rect x="3" y="5.5" width="18" height="13" rx="3" />
+      <path d="m4 7 8 6 8-6" />
+    </svg>
+  );
+}
+
+export function ArrowLeftIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="M19 12H5M11 6l-6 6 6 6" />
+    </svg>
+  );
+}
+
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} fill="none" stroke="currentColor">
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  );
+}

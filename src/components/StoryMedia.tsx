@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getCategory } from "@/lib/categories";
+import { isCategory } from "@/lib/categories";
+import { CategoryArt } from "./CategoryArt";
 import { embedSrc, isEmbedType, PLATFORM_LABELS, youtubeId, youtubeThumbnail, type EmbedType } from "@/lib/media";
 import type { FeedStory } from "@/lib/stories";
 
@@ -57,22 +58,20 @@ export function StoryMedia({ story, active, muted }: Props) {
     );
   }
 
-  return <PastelBackground category={story.category} />;
+  return <PastelBackground category={story.category} seed={story.id} />;
 }
 
-function PastelBackground({ category, label }: { category: string; label?: string }) {
-  const c = getCategory(category);
+function PastelBackground({ category, seed, label }: { category: string; seed: number; label?: string }) {
+  const motif = isCategory(category) ? category : "iyilik";
   return (
-    <div className={`absolute inset-0 bg-gradient-to-br ${c.gradient}`}>
-      <div className="absolute inset-x-0 top-[22%] flex flex-col items-center gap-4">
-        <span className="animate-float text-[7.5rem] drop-shadow-lg" aria-hidden>
-          {label ? "▶️" : c.emoji}
-        </span>
-        {label && <span className="rounded-full bg-white/70 px-4 py-1.5 text-sm font-bold text-[#3b2f3a]">{label}</span>}
-      </div>
-      <div className="absolute -left-10 top-1/2 h-40 w-40 rounded-full bg-white/40 blur-2xl" />
-      <div className="absolute -right-8 top-[15%] h-32 w-32 rounded-full bg-white/50 blur-2xl" />
-    </div>
+    <>
+      <CategoryArt motif={motif} seed={seed} focusY={0.42} />
+      {label && (
+        <div className="absolute inset-x-0 top-[50%] flex justify-center">
+          <span className="glass chip px-4 py-2 text-sm shadow-soft">▶ {label}</span>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -91,21 +90,21 @@ function Embed({ type, src, story, active }: { type: EmbedType; src: string; sto
       // eslint-disable-next-line @next/next/no-img-element
       <img src={youtubeThumbnail(ytId)} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
     ) : (
-      <PastelBackground category={story.category} label={`${label} videosu`} />
+      <PastelBackground category={story.category} seed={story.id} label={`${label} videosu`} />
     );
   }
 
   const isInstagram = type === "instagram";
   return (
-    <div className="absolute inset-0 bg-neutral-950">
-      {isInstagram && <PastelBackground category={story.category} />}
+    <div className="absolute inset-0 bg-[#1c1622]">
+      {isInstagram && <PastelBackground category={story.category} seed={story.id} />}
       <iframe
         src={src}
         title={`${label}: ${story.title}`}
         data-embed={type}
         className={
           isInstagram
-            ? "absolute inset-x-2 top-24 bottom-40 mx-auto h-auto w-[calc(100%-1rem)] max-w-[400px] rounded-2xl bg-white shadow-xl"
+            ? "absolute inset-x-3 top-28 bottom-[36%] mx-auto h-auto w-[calc(100%-1.5rem)] max-w-[400px] rounded-[26px] bg-white shadow-float"
             : type === "youtube"
               ? "absolute inset-0 h-full w-full scale-[1.35]"
               : "absolute inset-0 h-full w-full"
@@ -118,7 +117,7 @@ function Embed({ type, src, story, active }: { type: EmbedType; src: string; sto
         <button
           type="button"
           onClick={() => setInteractive(false)}
-          className="absolute top-28 right-4 z-10 rounded-full bg-white/90 px-3 py-1.5 text-xs font-bold text-[#3b2f3a] shadow-lg"
+          className="glass btn btn-sm absolute top-32 right-3 z-10 shadow-float"
         >
           ↕ Kaydırmaya dön
         </button>
@@ -127,7 +126,7 @@ function Embed({ type, src, story, active }: { type: EmbedType; src: string; sto
           <button
             type="button"
             onClick={() => setInteractive(true)}
-            className="absolute top-28 right-4 rounded-full bg-black/45 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md"
+            className="glass-dark btn btn-sm absolute top-32 right-3 shadow-float"
           >
             {isInstagram ? "▶ Oynat" : "🎛 Oynatıcıyı kullan"}
           </button>

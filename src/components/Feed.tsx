@@ -91,7 +91,7 @@ export function Feed({ initialStories, initialCursor, sponsored, category }: Pro
   }, []);
 
   return (
-    <main className="relative mx-auto h-dvh w-full max-w-[480px] overflow-hidden bg-neutral-900 sm:my-0 sm:shadow-2xl">
+    <main className="relative mx-auto h-dvh w-full max-w-[480px] overflow-hidden bg-background sm:shadow-float">
       <TopBar active={category} />
       <div ref={scrollerRef} className="no-scrollbar h-full snap-y snap-mandatory overflow-y-scroll overscroll-contain">
         {slides.map((slide, index) => (
@@ -115,8 +115,8 @@ export function Feed({ initialStories, initialCursor, sponsored, category }: Pro
         ))}
       </div>
       {toast && (
-        <div role="status" className="absolute inset-x-0 bottom-24 z-30 flex justify-center">
-          <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#3b2f3a] shadow-lg">{toast}</span>
+        <div role="status" className="absolute inset-x-0 top-28 z-30 flex justify-center">
+          <span className="glass animate-fade rounded-full px-4 py-2.5 text-sm font-extrabold shadow-float">{toast}</span>
         </div>
       )}
     </main>

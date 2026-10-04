@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/nunito";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fffaf5" },
+    { media: "(prefers-color-scheme: light)", color: "#fff8f1" },
     { media: "(prefers-color-scheme: dark)", color: "#1d1820" },
   ],
   width: "device-width",
