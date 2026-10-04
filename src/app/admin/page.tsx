@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { candidates, reports, sources, stories, subscribers } from "@/db/schema";
 import { Logo } from "@/components/Logo";
 import { requireAdmin } from "@/lib/auth";
-import { getCategory } from "@/lib/categories";
+import { decodeCategories, getCategory } from "@/lib/categories";
 import { reportHideThreshold, reportReasonLabel } from "@/lib/reports";
 import {
   addSource,
@@ -187,12 +187,12 @@ async function PublishedTab() {
       </div>
       <ul className="mt-5 space-y-3">
         {rows.map((s) => {
-          const cat = getCategory(s.category);
+          const cats = decodeCategories(s.categories, s.category).map(getCategory);
           return (
             <li key={s.id} className="card p-4">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span>
-                  {cat.emoji} {cat.label}
+                  {cats.map((c) => `${c.emoji} ${c.label}`).join(" · ")}
                 </span>
                 {s.isSponsored && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-900">Sponsorlu</span>}
                 {s.isDemo && <span className="rounded-full bg-sky-100 px-2 py-0.5 text-sky-900">Örnek</span>}

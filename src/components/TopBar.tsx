@@ -8,7 +8,7 @@ export function TopBar({ active }: { active: string | null }) {
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-20 pt-[max(0.7rem,env(safe-area-inset-top))] lg:hidden">
       <div className="pointer-events-auto flex items-center justify-between gap-2 px-3">
-        <Link href="/" aria-label="Pamuk Haber ana sayfa" className="glass rounded-full py-1.5 pr-4 pl-1.5 shadow-soft">
+        <Link href="/" aria-label="Pamuk Haber ana sayfa" className="glass inline-flex h-11 items-center justify-center rounded-full px-2.5 shadow-soft">
           <Logo />
         </Link>
         <div className="flex items-center gap-2">

@@ -70,7 +70,7 @@ export function StoryInfoSheet({ story, onClose }: Props) {
 
   const verification = VERIFICATION[story.verification];
   const origin = ORIGIN[story.origin];
-  const category = getCategory(story.category);
+  const categories = story.categories.length ? story.categories.map(getCategory) : [getCategory(story.category)];
   const credit = story.mediaCredit || (isEmbedType(story.mediaType) ? PLATFORM_LABELS[story.mediaType] : null);
 
   return createPortal(
@@ -91,8 +91,13 @@ export function StoryInfoSheet({ story, onClose }: Props) {
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1">
             <p className="flex items-center gap-1.5 text-xs font-extrabold tracking-wide text-muted uppercase">
-              <span className="h-2 w-2 rounded-full" style={{ background: category.color }} aria-hidden />
-              {category.label}
+              {categories.map((c, i) => (
+                <span key={c.slug} className="inline-flex items-center gap-1.5">
+                  {i > 0 && <span aria-hidden>·</span>}
+                  <span className="h-2 w-2 rounded-full" style={{ background: c.color }} aria-hidden />
+                  {c.label}
+                </span>
+              ))}
             </p>
             <h2 id={`info-${story.id}`} className="display mt-1 text-[22px]">
               Bu haber hakkında

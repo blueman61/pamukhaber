@@ -8,7 +8,7 @@ export function DesktopSidebar({ active }: { active: string | null }) {
   const tabs = [{ slug: null, label: "Tüm haberler", color: null }, ...CATEGORIES];
   return (
     <aside className="hidden w-56 shrink-0 flex-col gap-5 lg:flex xl:w-64" aria-label="Gezinme">
-      <Link href="/" aria-label="Pamuk Haber ana sayfa" className="glass self-start rounded-full py-2 pr-5 pl-2 shadow-soft">
+      <Link href="/" aria-label="Pamuk Haber ana sayfa" className="glass inline-flex h-12 items-center justify-center self-start rounded-full px-3 shadow-soft">
         <Logo />
       </Link>
       <p className="px-2 text-[15px] leading-relaxed font-semibold text-muted">

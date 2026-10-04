@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { candidates, sources, stories } from "@/db/schema";
 import { isAiConfigured } from "@/lib/ai";
 import { requireAdmin } from "@/lib/auth";
+import { decodeCategories } from "@/lib/categories";
 import { StoryForm, type StoryFormDefaults } from "./StoryForm";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic";
 const EMPTY: StoryFormDefaults = {
   title: "",
   summary: "",
-  category: "iyilik",
+  categories: [],
   mediaType: "none",
   mediaUrl: "",
   mediaCredit: "",
@@ -56,7 +57,7 @@ export default async function NewStoryPage({ searchParams }: PageProps<"/admin/y
       storyId: s.id,
       title: s.title,
       summary: s.summary,
-      category: s.category,
+      categories: decodeCategories(s.categories, s.category),
       mediaType: s.mediaType,
       mediaUrl: s.mediaUrl ?? "",
       mediaCredit: s.mediaCredit ?? "",

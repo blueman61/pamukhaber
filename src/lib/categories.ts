@@ -13,8 +13,15 @@ export const CATEGORIES = [
     slug: "iyilik",
     label: "İyilik",
     emoji: "🤝",
-    color: "#ec5f9b",
-    art: { sky: ["#ffe0ec", "#ffc6dc"], sun: "#fff1f6", hills: ["#f9a8c9", "#ee86b1"], motif: "#e2508f" },
+    color: "#c45ad4",
+    art: { sky: ["#f7e6ff", "#ecccfb"], sun: "#fdf6ff", hills: ["#e2acf3", "#cf8ce6"], motif: "#a94bc2" },
+  },
+  {
+    slug: "sevgi",
+    label: "Sevgi",
+    emoji: "❤️",
+    color: "#e8456b",
+    art: { sky: ["#ffe3e8", "#ffc6d2"], sun: "#fff3f5", hills: ["#f7a3b5", "#ec7b95"], motif: "#e8456b" },
   },
   {
     slug: "bilim",
@@ -62,4 +69,15 @@ export function isCategory(value: unknown): value is CategorySlug {
 
 export function getCategory(slug: string): Category {
   return CATEGORIES.find((c) => c.slug === slug) ?? CATEGORIES[1];
+}
+
+/** Çoklu kategori kolonunun biçimi: "|sevgi|hayvanlar|" */
+export function encodeCategories(list: readonly string[]): string {
+  return `|${list.join("|")}|`;
+}
+
+export function decodeCategories(value: string | null | undefined, primary?: string): CategorySlug[] {
+  const list = (value ?? "").split("|").filter(isCategory);
+  const all = primary && isCategory(primary) ? [primary, ...list] : list;
+  return [...new Set(all)];
 }

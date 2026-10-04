@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { getCategory } from "@/lib/categories";
+import { useCallback, useEffect, useState } from "react";
+import { getCategory, isCategory } from "@/lib/categories";
 import { isEmbedType, PLATFORM_LABELS } from "@/lib/media";
 import type { FeedStory } from "@/lib/stories";
 import { DotIcon, ExternalIcon, HeartIcon, ShareIcon, VolumeIcon } from "./icons";
@@ -50,6 +50,52 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
   const sourceLabel = story.isSponsored ? "Daha fazlası" : `Kaynak · ${story.sourceName || hostOf(outbound)}`;
   const chipTone = hasMedia ? "bg-white/15 text-white" : "bg-white/85 text-ink shadow-sm dark:bg-white/10 dark:text-foreground";
 
+  // Videolu kartlarda video ön planda: metin kısa bir tanıtımdan sonra küçülür, istenince açılır.
+  const videoFirst = story.mediaType === "video" || isEmbedType(story.mediaType);
+  const extraCategories = story.categories.filter((c) => c !== story.category && isCategory(c)).slice(0, 2).map(getCategory);
+
+  const chips = (
+    <div className="mb-3 flex flex-wrap items-center gap-1.5">
+      {story.isSponsored ? (
+        <span className="chip bg-butter text-[#6b4a00]">Sponsorlu{story.sponsorName ? ` · ${story.sponsorName}` : ""}</span>
+      ) : (
+        [category, ...extraCategories].map((c) => (
+          <span key={c.slug} className={`chip ${chipTone}`}>
+            <span className="h-2 w-2 rounded-full" style={{ background: c.color }} aria-hidden />
+            {c.label}
+          </span>
+        ))
+      )}
+      {isEmbedType(story.mediaType) && <span className={`chip ${chipTone}`}>▶ {PLATFORM_LABELS[story.mediaType]}</span>}
+      {story.isDemo && <span className="chip bg-sky-soft/90 text-[#123a5c]">Örnek içerik</span>}
+    </div>
+  );
+
+  const fullText = (
+    <>
+      <h2 className="display text-[26px] text-balance">{story.title}</h2>
+      <p className={`mt-2 text-[15.5px] leading-relaxed ${hasMedia ? "text-white/85" : "text-ink/80 dark:text-foreground/80"}`}>
+        {story.summary}
+      </p>
+      {(outbound || story.mediaCredit) && (
+        <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+          {outbound && (
+            <a
+              href={outbound}
+              target="_blank"
+              rel={story.isSponsored ? "sponsored noopener" : "noopener"}
+              className={`chip max-w-full ${chipTone} hover:opacity-90`}
+            >
+              <ExternalIcon className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{sourceLabel}</span>
+            </a>
+          )}
+          {story.mediaCredit && <span className={hasMedia ? "text-white/65" : "text-muted"}>Görsel: {story.mediaCredit}</span>}
+        </div>
+      )}
+    </>
+  );
+
   return (
     <article
       data-active={active}
@@ -65,7 +111,11 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
       )}
 
       {hasMedia && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/45 to-transparent" />
+        <div
+          className={`pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent ${
+            videoFirst ? "h-1/4 from-black/30" : "h-1/2 from-black/45"
+          }`}
+        />
       )}
 
       <div className="absolute inset-x-0 bottom-0 flex flex-col items-end gap-3 px-3 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
@@ -103,48 +153,20 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
           )}
         </div>
 
-        <section
-          className={`reveal w-full translate-y-3 rounded-[30px] p-5 opacity-0 shadow-float transition duration-500 ease-out group-data-[active=true]:translate-y-0 group-data-[active=true]:opacity-100 ${
-            hasMedia ? "glass-dark" : "glass"
-          }`}
-        >
-          <div className="mb-3 flex flex-wrap items-center gap-1.5">
-            {story.isSponsored ? (
-              <span className="chip bg-butter text-[#6b4a00]">
-                Sponsorlu{story.sponsorName ? ` · ${story.sponsorName}` : ""}
-              </span>
-            ) : (
-              <span className={`chip ${chipTone}`}>
-                <span className="h-2 w-2 rounded-full" style={{ background: category.color }} aria-hidden />
-                {category.label}
-              </span>
-            )}
-            {isEmbedType(story.mediaType) && <span className={`chip ${chipTone}`}>▶ {PLATFORM_LABELS[story.mediaType]}</span>}
-            {story.isDemo && <span className="chip bg-sky-soft/90 text-[#123a5c]">Örnek içerik</span>}
-          </div>
-          <h2 className="display text-[26px] text-balance">{story.title}</h2>
-          <p className={`mt-2 text-[15.5px] leading-relaxed ${hasMedia ? "text-white/85" : "text-ink/80 dark:text-foreground/80"}`}>
-            {story.summary}
-          </p>
-          {(outbound || story.mediaCredit) && (
-            <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-              {outbound && (
-                <a
-                  href={outbound}
-                  target="_blank"
-                  rel={story.isSponsored ? "sponsored noopener" : "noopener"}
-                  className={`chip max-w-full ${chipTone} hover:opacity-90`}
-                >
-                  <ExternalIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{sourceLabel}</span>
-                </a>
-              )}
-              {story.mediaCredit && (
-                <span className={hasMedia ? "text-white/65" : "text-muted"}>Görsel: {story.mediaCredit}</span>
-              )}
-            </div>
-          )}
-        </section>
+        {videoFirst ? (
+          <VideoCaption key={String(active)} active={active} chips={chips} title={story.title} accent={category.color}>
+            {fullText}
+          </VideoCaption>
+        ) : (
+          <section
+            className={`reveal w-full translate-y-3 rounded-[30px] p-5 opacity-0 shadow-float transition duration-500 ease-out group-data-[active=true]:translate-y-0 group-data-[active=true]:opacity-100 ${
+              hasMedia ? "glass-dark" : "glass"
+            }`}
+          >
+            {chips}
+            {fullText}
+          </section>
+        )}
       </div>
       {infoOpen && <StoryInfoSheet story={story} onClose={closeInfo} />}
     </article>
@@ -186,6 +208,83 @@ function RailButton({
     >
       {children}
       {caption && <span className="-mt-0.5 text-[10.5px] leading-none font-extrabold">{caption}</span>}
+    </button>
+  );
+}
+
+const INTRO_MS = 4_000;
+
+/**
+ * Videolu kartın metni: önce birkaç saniye kategori + başlık, sonra küçük bir "Haberi oku" düğmesi.
+ * Okur dokununca tam metin açılır; kart yeniden ekrana gelince (key ile) tanıtım baştan başlar.
+ */
+function VideoCaption({
+  active,
+  chips,
+  title,
+  accent,
+  children,
+}: {
+  active: boolean;
+  chips: React.ReactNode;
+  title: string;
+  accent: string;
+  children: React.ReactNode;
+}) {
+  const [mode, setMode] = useState<"intro" | "mini" | "open">("intro");
+
+  useEffect(() => {
+    if (!active || mode !== "intro") return;
+    const t = setTimeout(() => setMode("mini"), INTRO_MS);
+    return () => clearTimeout(t);
+  }, [active, mode]);
+
+  if (mode === "open") {
+    return (
+      <section data-caption="open" className="glass-dark animate-fade relative w-full rounded-[30px] p-5 pt-4 shadow-float">
+        <button
+          type="button"
+          onClick={() => setMode("mini")}
+          aria-expanded="true"
+          aria-label="Metni gizle"
+          className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-lg font-black"
+        >
+          ▾
+        </button>
+        <div className="pr-10">{chips}</div>
+        {children}
+      </section>
+    );
+  }
+
+  if (mode === "intro") {
+    return (
+      <button
+        type="button"
+        data-caption="intro"
+        onClick={() => setMode("open")}
+        aria-expanded="false"
+        className="glass-dark reveal w-full translate-y-3 rounded-[26px] px-4 pt-3.5 pb-3 text-left opacity-0 shadow-float transition duration-500 ease-out group-data-[active=true]:translate-y-0 group-data-[active=true]:opacity-100"
+      >
+        <span className="block [&>div]:mb-2">{chips}</span>
+        <span className="display line-clamp-2 block text-[20px]">{title}</span>
+        <span className="mt-1.5 block text-xs font-extrabold text-white/70">▴ Haberi oku</span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      data-caption="mini"
+      onClick={() => setMode("open")}
+      aria-expanded="false"
+      aria-label={`Haberi oku: ${title}`}
+      className="glass-dark animate-fade flex max-w-[78%] items-center gap-2 self-start rounded-full py-2 pr-4 pl-3 text-sm font-extrabold shadow-float"
+    >
+      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: accent }} aria-hidden />
+      <span className="truncate">{title}</span>
+      <span className="shrink-0 text-white/75">▴</span>
     </button>
   );
 }

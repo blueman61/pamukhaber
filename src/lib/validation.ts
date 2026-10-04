@@ -1,10 +1,11 @@
-import { isCategory, type CategorySlug } from "./categories";
+import { encodeCategories, isCategory, type CategorySlug } from "./categories";
 import { instagramShortcode, MEDIA_TYPES, tiktokId, youtubeId, type MediaType } from "./media";
 
 export const TITLE_MAX = 90;
 export const SUMMARY_MAX = 320;
 export const NOTE_MAX = 500;
 export const EXTRA_SOURCES_MAX = 5;
+export const CATEGORIES_MAX = 3;
 
 export const ORIGINS = ["editor", "reader", "partner"] as const;
 export type Origin = (typeof ORIGINS)[number];
@@ -15,6 +16,8 @@ export type StoryInput = {
   title: string;
   summary: string;
   category: CategorySlug;
+  /** Ana kategori dahil tüm kategoriler, "|a|b|" biçiminde. */
+  categories: string;
   mediaType: MediaType;
   mediaUrl: string | null;
   mediaCredit: string | null;
@@ -51,7 +54,12 @@ export function validateStoryForm(form: FormData): ValidationResult {
   const errors: FieldErrors = {};
   const title = str(form.get("title"));
   const summary = str(form.get("summary"));
-  const category = str(form.get("category"));
+  // Çoklu seçim "categories" alanlarından gelir; ilk seçilen ana kategoridir. Eski tek alan da desteklenir.
+  const picked = [...form.getAll("categories"), form.get("category")]
+    .map((v) => (typeof v === "string" ? v.trim() : ""))
+    .filter(Boolean);
+  const chosen = [...new Set(picked)];
+  const category = chosen[0] ?? "";
   const mediaTypeRaw = str(form.get("mediaType")) || "none";
   const mediaUrl = opt(form.get("mediaUrl"));
   const sourceUrl = opt(form.get("sourceUrl"));
@@ -65,7 +73,9 @@ export function validateStoryForm(form: FormData): ValidationResult {
   if (!summary) errors.summary = "Özet gerekli.";
   else if (summary.length > SUMMARY_MAX) errors.summary = `Özet en fazla ${SUMMARY_MAX} karakter olmalı.`;
 
-  if (!isCategory(category)) errors.category = "Geçerli bir kategori seçin.";
+  if (chosen.length === 0) errors.category = "En az bir kategori seçin.";
+  else if (!chosen.every(isCategory)) errors.category = "Geçerli bir kategori seçin.";
+  else if (chosen.length > CATEGORIES_MAX) errors.category = `En fazla ${CATEGORIES_MAX} kategori seçebilirsiniz.`;
 
   const mediaType = (MEDIA_TYPES as readonly string[]).includes(mediaTypeRaw)
     ? (mediaTypeRaw as MediaType)
@@ -113,6 +123,7 @@ export function validateStoryForm(form: FormData): ValidationResult {
       title,
       summary,
       category: category as CategorySlug,
+      categories: encodeCategories(chosen),
       mediaType,
       mediaUrl: mediaType === "none" ? null : mediaUrl,
       mediaCredit: opt(form.get("mediaCredit")),

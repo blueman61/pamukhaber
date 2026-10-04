@@ -114,6 +114,7 @@ describe("buildSlides", () => {
     title: `Hikâye ${id}`,
     summary: "",
     category: "iyilik",
+    categories: ["iyilik"],
     mediaType: "none",
     mediaUrl: null,
     mediaCredit: null,

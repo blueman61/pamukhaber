@@ -60,7 +60,10 @@ export const stories = sqliteTable(
     slug: text("slug").notNull().unique(),
     title: text("title").notNull(),
     summary: text("summary").notNull(),
+    /** Ana kategori: illüstrasyon ve renk buradan gelir. */
     category: text("category").notNull(),
+    /** Tüm kategoriler (ana dahil), biçim: "|sevgi|hayvanlar|" */
+    categories: text("categories"),
     mediaType: text("media_type", { enum: MEDIA_TYPES })
       .notNull()
       .default("none"),

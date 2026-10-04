@@ -8,6 +8,7 @@
 import { count } from "drizzle-orm";
 import { db } from "./index";
 import { sources, stories, type NewStory } from "./schema";
+import { encodeCategories } from "../lib/categories";
 import { DEFAULT_SOURCES } from "../lib/sources";
 import { slugify } from "../lib/slug";
 
@@ -17,6 +18,12 @@ const DEMO: Omit<NewStory, "slug">[] = [
     summary:
       "Bir apartmanın sakinleri eski kasalardan ve köpük levhalardan yalıtımlı kedi evleri yapıp sokağa yerleştirdi. Bu, akışın nasıl görüneceğini gösteren örnek bir içeriktir.",
     category: "hayvanlar",
+  },
+  {
+    title: "60 yıllık çift, ilk tanıştıkları parkta yeniden el ele",
+    summary:
+      "Evliliklerinin 60. yılını, ilk kez karşılaştıkları parktaki bankta torunlarının hazırladığı küçük bir sürprizle kutladılar. (Örnek içerik)",
+    category: "sevgi",
   },
   {
     title: "Emekli öğretmen, köy okuluna kütüphane kurdu",
@@ -56,12 +63,14 @@ const DEMO: Omit<NewStory, "slug">[] = [
   },
   {
     title: "Kaybolan köpek 300 kilometre yol yürüyüp evine döndü",
+    categories: encodeCategories(["hayvanlar", "sevgi"]),
     summary:
       "Aylardır aranan köpeğin bir sabah kapının önünde kuyruğunu sallarken bulunması aileyi gözyaşlarına boğdu. (Örnek içerik)",
     category: "hayvanlar",
   },
   {
     title: "Kasabanın fırını, kimse aç kalmasın diye askıda ekmek başlattı",
+    categories: encodeCategories(["iyilik", "sevgi", "topluluk"]),
     summary:
       "Müşteriler fazladan bir ekmeğin parasını ödüyor, ihtiyacı olan herkes askıdaki ekmeği alabiliyor. Gelenek kısa sürede çevre kasabalara yayıldı. (Örnek içerik)",
     category: "iyilik",
@@ -92,6 +101,7 @@ async function main() {
     // Ters sırayla ekle ki listenin başı akışta en üstte görünsün.
     const rows = [...DEMO].reverse().map((s, i) => ({
       ...s,
+      categories: s.categories ?? encodeCategories([s.category]),
       slug: `ornek-${slugify(s.title)}-${i}`,
       sourceName: s.isSponsored ? null : "Pamuk Haber (örnek)",
       isDemo: true,

@@ -4,6 +4,7 @@ Yalnızca güzel ve iç ısıtan haberlerin, TikTok benzeri dikey kaydırmalı k
 
 - **Okur tarafı:** Tam ekran kartlar, kategori sekmeleri, çift dokunarak beğenme, paylaşım bağlantıları, bülten kaydı, ana ekrana eklenebilir (PWA). Görsel, MP4, **YouTube/Shorts, TikTok ve Instagram Reels** gömme desteği.
 - **Şeffaflık:** Her kartta **yuvarlak içinde nokta** düğmesi: kaynak ve ek kaynaklar, doğrulama durumu (Doğrulandı / Kaynağa dayalı / Doğrulanmadı), haberi kimin getirdiği (editör / okur / kurum), yapay zekâ desteği bilgisi ve **yanlış bilgi / sahte içerik bildirme**. Aynı hikâyeye 3 farklı okur bildirimde bulunursa hikâye editör incelemesine kadar gizlenir.
+- **Kategoriler:** Hayvanlar, İyilik, Sevgi, Bilim, Doğa, Sağlık, Başarı, Topluluk; bir haber en fazla 3 kategoride yer alabilir (ilki ana kategori). Videolu kartlarda metin kısa bir tanıtımdan sonra küçülür, dokununca açılır.
 - **Okur gönderimi (`/gonder`):** Okurlar haber bağlantısı gönderir; editör kuyruğuna "Okur" rozetiyle düşer.
 - **Editör tarafı (`/admin`):** RSS kaynaklarından otomatik toplanan adaylar pozitiflik skoruna göre sıralanır; **hiçbir haber editör onayı olmadan yayına girmez.** Editör Türkçe başlık + özet yazar, kategori ve görsel/video seçer. **Gemini** ile tek tıkla Türkçe taslak ve "başka kaynaklarda ara" doğrulama yardımı (isteğe bağlı).
 - **Gelir altyapısı:** Açıkça etiketli sponsorlu kartlar, bülten aboneleri, "Destek ol" bağlantısı.

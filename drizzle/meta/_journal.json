@@ -15,6 +15,13 @@
       "when": 1791108499283,
       "tag": "0001_trust_reports_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791119014658,
+      "tag": "0002_multi_categories",
+      "breakpoints": true
     }
   ]
 }

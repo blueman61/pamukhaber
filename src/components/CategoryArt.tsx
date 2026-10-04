@@ -108,13 +108,28 @@ function Motif({ motif, color, light, seed, uid }: { motif: ArtMotif; color: str
           </g>
         </g>
       );
-    case "iyilik":
+    case "sevgi":
       return (
         <g>
           <path d={HEART} transform="scale(1.25)" fill={color} />
           <path d={HEART} transform="translate(-62 -58) scale(0.3)" fill={color} opacity={0.6} />
           <path d={HEART} transform="translate(66 -36) scale(0.22)" fill={color} opacity={0.5} />
           <ellipse cx="-22" cy="-22" rx="12" ry="8" fill="#fff" opacity={0.55} transform="rotate(-30 -22 -22)" />
+        </g>
+      );
+    case "iyilik":
+      // Hediye kutusu: vermenin, paylaşmanın simgesi.
+      return (
+        <g>
+          <rect x="-58" y="-14" width="116" height="78" rx="14" fill={color} />
+          <rect x="-66" y="-38" width="132" height="30" rx="12" fill={color} />
+          <rect x="-66" y="-38" width="132" height="30" rx="12" fill="#fff" opacity={0.18} />
+          <rect x="-10" y="-38" width="20" height="102" fill="#fff" opacity={0.9} />
+          <path d="M0 -40 C -18 -78, -62 -66, -36 -44 C -26 -38, -10 -38, 0 -40 Z" fill="#fff" opacity={0.95} />
+          <path d="M0 -40 C 18 -78, 62 -66, 36 -44 C 26 -38, 10 -38, 0 -40 Z" fill="#fff" opacity={0.95} />
+          <Star x={-78} y={-70} r={10} fill="#fff" />
+          <Star x={80} y={-20} r={7} fill="#fff" />
+          <Star x={-84} y={40} r={6} fill="#fff" opacity={0.8} />
         </g>
       );
     case "bilim":
@@ -141,17 +156,20 @@ function Motif({ motif, color, light, seed, uid }: { motif: ArtMotif; color: str
         </g>
       );
     case "saglik":
+      // Tıbbi artı + nabız çizgisi.
       return (
         <g>
-          <path d={HEART} transform="scale(1.25)" fill={color} />
+          <rect x="-26" y="-74" width="52" height="148" rx="18" fill={color} />
+          <rect x="-74" y="-26" width="148" height="52" rx="18" fill={color} />
           <path
-            d="M-58 0 H-24 L-12 -24 L4 26 L18 -10 L28 0 H58"
+            d="M-64 0 H-28 L-16 -24 L2 26 L16 -10 L26 0 H64"
             fill="none"
             stroke="#fff"
             strokeWidth={7}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+          <circle cx="-40" cy="-52" r="9" fill="#fff" opacity={0.4} />
         </g>
       );
     case "basari":

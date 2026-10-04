@@ -1,7 +1,7 @@
-import { and, desc, eq, lt } from "drizzle-orm";
+import { and, desc, eq, like, lt, or, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { stories, type Story } from "@/db/schema";
-import type { CategorySlug } from "./categories";
+import { decodeCategories, type CategorySlug } from "./categories";
 import type { MediaType } from "./media";
 
 export const PAGE_SIZE = 8;
@@ -13,6 +13,7 @@ export type FeedStory = {
   title: string;
   summary: string;
   category: string;
+  categories: string[];
   mediaType: MediaType;
   mediaUrl: string | null;
   mediaCredit: string | null;
@@ -39,6 +40,7 @@ export function toFeedStory(s: Story): FeedStory {
     title: s.title,
     summary: s.summary,
     category: s.category,
+    categories: decodeCategories(s.categories, s.category),
     mediaType: s.mediaType,
     mediaUrl: s.mediaUrl,
     mediaCredit: s.mediaCredit,
@@ -59,9 +61,14 @@ export function toFeedStory(s: Story): FeedStory {
   };
 }
 
+/** Ana kategorisi ya da ek kategorilerinden biri eşleşen hikâyeler. */
+export function categoryFilter(slug: CategorySlug): SQL {
+  return or(eq(stories.category, slug), like(stories.categories, `%|${slug}|%`))!;
+}
+
 export async function getFeedPage(opts: { cursor?: number | null; category?: CategorySlug | null }) {
   const conditions = [eq(stories.status, "published"), eq(stories.isSponsored, false)];
-  if (opts.category) conditions.push(eq(stories.category, opts.category));
+  if (opts.category) conditions.push(categoryFilter(opts.category));
   if (opts.cursor) conditions.push(lt(stories.id, opts.cursor));
 
   const rows = await db

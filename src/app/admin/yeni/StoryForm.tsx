@@ -3,7 +3,7 @@
 import { startTransition, useActionState, useState, useTransition } from "react";
 import { CATEGORIES } from "@/lib/categories";
 import type { MediaType } from "@/lib/media";
-import { EXTRA_SOURCES_MAX, NOTE_MAX, SUMMARY_MAX, TITLE_MAX, type Origin, type Verification } from "@/lib/validation";
+import { CATEGORIES_MAX, EXTRA_SOURCES_MAX, NOTE_MAX, SUMMARY_MAX, TITLE_MAX, type Origin, type Verification } from "@/lib/validation";
 import {
   aiCorroborate,
   aiDraft,
@@ -18,7 +18,8 @@ export type StoryFormDefaults = {
   candidateId?: number;
   title: string;
   summary: string;
-  category: string;
+  /** Seçim sırasıyla kategoriler; ilki ana kategori. */
+  categories: string[];
   mediaType: MediaType;
   mediaUrl: string;
   mediaCredit: string;
@@ -84,7 +85,7 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
   const [state, action, pending] = useActionState<StoryFormState, FormData>(saveStory, {});
   const [title, setTitle] = useState(defaults.title);
   const [summary, setSummary] = useState(defaults.summary);
-  const [category, setCategory] = useState(defaults.category);
+  const [cats, setCats] = useState<string[]>(defaults.categories);
   const [mediaType, setMediaType] = useState<MediaType>(defaults.mediaType);
   const [sourceUrl, setSourceUrl] = useState(defaults.sourceUrl);
   const [sponsored, setSponsored] = useState(defaults.isSponsored);
@@ -118,7 +119,10 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
       if (res.draft) {
         setTitle(res.draft.title);
         setSummary(res.draft.summary);
-        setCategory(res.draft.category);
+        const suggested = res.draft.category;
+        setCats((prev) =>
+          prev.includes(suggested) || prev.length >= CATEGORIES_MAX ? prev : [...prev, suggested],
+        );
         setAiAssisted(true);
       }
     });
@@ -233,15 +237,41 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
         <textarea name="summary" value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} className={input} required />
       </Field>
 
-      <Field label="Kategori" error={errors.category}>
-        <select name="category" value={category} onChange={(e) => setCategory(e.target.value)} className={input}>
-          {CATEGORIES.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.emoji} {c.label}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <fieldset>
+        <legend className="label w-full">
+          Kategoriler
+          <span className="font-semibold text-muted">{`${cats.length}/${CATEGORIES_MAX}`}</span>
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {CATEGORIES.map((c) => {
+            const index = cats.indexOf(c.slug);
+            const selected = index >= 0;
+            return (
+              <button
+                key={c.slug}
+                type="button"
+                aria-pressed={selected}
+                disabled={!selected && cats.length >= CATEGORIES_MAX}
+                onClick={() =>
+                  setCats((prev) => (selected ? prev.filter((x) => x !== c.slug) : [...prev, c.slug]))
+                }
+                className={`choice disabled:opacity-40 ${selected ? "border-accent bg-accent-soft" : ""}`}
+              >
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} aria-hidden />
+                {c.label}
+                {index === 0 && <span className="chip bg-accent px-1.5 py-0 text-[10px] text-white">Ana</span>}
+              </button>
+            );
+          })}
+        </div>
+        {cats.map((c) => (
+          <input key={c} type="hidden" name="categories" value={c} />
+        ))}
+        <p className="mt-2 text-xs text-muted">
+          En fazla {CATEGORIES_MAX} kategori. İlk seçtiğin ana kategori olur; kartın çizimi ve rengi ondan gelir.
+        </p>
+        {errors.category && <p className="mt-1 text-sm font-bold text-rose-600">{errors.category}</p>}
+      </fieldset>
 
       <fieldset className="card space-y-3 p-5 [&>:not(legend)]:clear-both">
         <legend className="float-left mb-3 w-full text-base font-black">Görsel / video</legend>
