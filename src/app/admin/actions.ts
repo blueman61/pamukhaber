@@ -1,12 +1,14 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
+import { eq } from "drizzle-orm";
 import { candidates, reports, sources, stories } from "@/db/schema";
-import { AiError, findCorroboration, generateDraft, type AiDraft, type Corroboration } from "@/lib/ai";
+import { getSettings, SETTING_KEYS, setSetting } from "@/lib/settings";
+import { removeSource } from "@/lib/sources-admin";
+import { AiError, findCorroboration, generateDraft, setGeminiModel, type AiDraft, type Corroboration } from "@/lib/ai";
 import { checkPassword, requireAdmin } from "@/lib/auth";
 import { ingestAll } from "@/lib/ingest";
 import { resolveShortLink } from "@/lib/links";
@@ -154,6 +156,7 @@ export async function aiDraft(form: FormData): Promise<AiDraftState> {
   }
   if (!input.url && !input.title) return { error: "Taslak için en az bir kaynak bağlantısı veya başlık girin." };
   try {
+    setGeminiModel((await getSettings()).gemini_model);
     return { draft: await generateDraft(input) };
   } catch (err) {
     return { error: err instanceof AiError ? err.message : "Taslak üretilemedi." };
@@ -165,6 +168,7 @@ export async function aiCorroborate(form: FormData): Promise<AiCorroborationStat
   const title = field(form, "title");
   if (!title) return { error: "Önce bir başlık girin ya da taslak üretin." };
   try {
+    setGeminiModel((await getSettings()).gemini_model);
     return {
       result: await findCorroboration({ title, summary: field(form, "summary"), sourceUrl: field(form, "sourceUrl") || null }),
     };
@@ -191,4 +195,29 @@ export async function toggleSource(form: FormData) {
   const id = idOf(form);
   if (id) await db.update(sources).set({ active: form.get("active") === "1" }).where(eq(sources.id, id));
   revalidatePath("/admin");
+}
+
+/** Kaynağı siler: bekleyen adayları gider, onaylanmış/reddedilmişler kaynaksız kalır; yayındaki haberlere dokunulmaz. */
+export async function deleteSource(form: FormData) {
+  await requireAdmin();
+  const id = idOf(form);
+  if (!id) return;
+  const pending = await removeSource(id);
+  revalidatePath("/admin");
+  back("kaynaklar", `Kaynak silindi${pending ? ` (bekleyen ${pending} aday da kaldırıldı)` : ""}.`);
+}
+
+// ---------- Ayarlar ----------
+
+export async function saveSettings(form: FormData) {
+  await requireAdmin();
+  for (const key of SETTING_KEYS) {
+    const raw = String(form.get(key) ?? "").trim();
+    if ((key === "support_url") && raw && !isHttpUrl(raw)) back("ayarlar", "Destek bağlantısı geçerli bir adres olmalı.");
+    await setSetting(key, raw);
+  }
+  revalidatePath("/");
+  revalidatePath("/hakkinda");
+  revalidatePath("/admin");
+  back("ayarlar", "Ayarlar kaydedildi. Yayın gerekmez, hemen geçerli.");
 }

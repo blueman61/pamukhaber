@@ -129,6 +129,12 @@ export const subscribers = sqliteTable("subscribers", {
   createdAt: createdAt(),
 });
 
+/** Küçük anahtar/değer ayarları: yayın (deploy) gerektirmeden panelden değiştirilir. */
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
 export type Source = typeof sources.$inferSelect;
 export type Candidate = typeof candidates.$inferSelect;
 export type Story = typeof stories.$inferSelect;

@@ -2,8 +2,7 @@ import Link from "next/link";
 import { CategoryArt } from "./CategoryArt";
 import { MailIcon } from "./icons";
 
-export function EndCard({ empty }: { empty?: boolean }) {
-  const supportUrl = process.env.NEXT_PUBLIC_SUPPORT_URL;
+export function EndCard({ empty, supportUrl }: { empty?: boolean; supportUrl?: string }) {
   return (
     <section className="relative h-full w-full overflow-hidden">
       <CategoryArt motif={empty ? "doga" : "moon"} focusY={0.3} />

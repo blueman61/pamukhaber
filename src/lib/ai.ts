@@ -20,7 +20,13 @@ export function isAiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
 
-export function candidateModels(preferred = process.env.GEMINI_MODEL): string[] {
+let modelOverride: string | undefined;
+/** Panelden (Ayarlar) seçilen model; her çağrıdan önce sunucu eylemleri bunu günceller. */
+export function setGeminiModel(model: string | undefined) {
+  modelOverride = model?.trim() || undefined;
+}
+
+export function candidateModels(preferred = modelOverride ?? process.env.GEMINI_MODEL): string[] {
   const list = [preferred?.trim(), ...DEFAULT_GEMINI_MODELS].filter((m): m is string => Boolean(m));
   return [...new Set(list)];
 }

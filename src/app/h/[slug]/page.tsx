@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Feed } from "@/components/Feed";
+import { getSettings } from "@/lib/settings";
 import { getFeedPage, getSponsoredStories, getStoryBySlug } from "@/lib/stories";
 
 export const dynamic = "force-dynamic";
@@ -28,8 +29,16 @@ export default async function StoryPage({ params }: PageProps<"/h/[slug]">) {
   const { slug } = await params;
   const story = await getStoryBySlug(slug);
   if (!story) notFound();
-  const [page, sponsored] = await Promise.all([getFeedPage({}), getSponsoredStories()]);
+  const [page, sponsored, settings] = await Promise.all([getFeedPage({}), getSponsoredStories(), getSettings()]);
   const rest = story.isSponsored ? page.stories : page.stories.filter((s) => s.id !== story.id);
 
-  return <Feed initialStories={[story, ...rest]} initialCursor={page.nextCursor} sponsored={sponsored} category={null} />;
+  return (
+    <Feed
+      initialStories={[story, ...rest]}
+      initialCursor={page.nextCursor}
+      sponsored={sponsored}
+      category={null}
+      supportUrl={settings.support_url}
+    />
+  );
 }

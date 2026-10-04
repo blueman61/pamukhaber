@@ -4,16 +4,20 @@ import { db } from "@/db";
 import { candidates, reports, sources, stories, subscribers } from "@/db/schema";
 import { Logo } from "@/components/Logo";
 import { requireAdmin } from "@/lib/auth";
+import { getSettings } from "@/lib/settings";
+import { ConfirmButton } from "./ConfirmButton";
 import { decodeCategories, getCategory } from "@/lib/categories";
 import { reportHideThreshold, reportReasonLabel } from "@/lib/reports";
 import {
   addSource,
   deleteDemoStories,
+  deleteSource,
   deleteStory,
   logout,
   rejectCandidate,
   resolveReports,
   runIngest,
+  saveSettings,
   setStoryStatus,
   toggleSource,
 } from "./actions";
@@ -25,6 +29,7 @@ const TABS = [
   { id: "yayinda", label: "Yayında" },
   { id: "bildirimler", label: "Bildirimler" },
   { id: "kaynaklar", label: "Kaynaklar" },
+  { id: "ayarlar", label: "Ayarlar" },
   { id: "aboneler", label: "Aboneler" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
@@ -89,6 +94,7 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
         {tab === "yayinda" && <PublishedTab />}
         {tab === "bildirimler" && <ReportsTab />}
         {tab === "kaynaklar" && <SourcesTab />}
+        {tab === "ayarlar" && <SettingsTab />}
         {tab === "aboneler" && <SubscribersTab />}
       </div>
     </main>
@@ -342,6 +348,15 @@ async function SourcesTab() {
                 {s.active ? "Açık" : "Kapalı"}
               </button>
             </form>
+            <form action={deleteSource}>
+              <input type="hidden" name="id" value={s.id} />
+              <ConfirmButton
+                message={`"${s.name}" kaynağı silinsin mi? Bekleyen adayları da silinir; yayındaki haberler etkilenmez.`}
+                className={`${btn} btn-ghost text-rose-600`}
+              >
+                Sil
+              </ConfirmButton>
+            </form>
           </li>
         ))}
       </ul>
@@ -365,6 +380,38 @@ async function SubscribersTab() {
         ))}
         {rows.length === 0 && <li className="px-4 py-6 text-center text-sm text-muted">Henüz abone yok.</li>}
       </ul>
+    </section>
+  );
+}
+
+async function SettingsTab() {
+  const v = await getSettings();
+  return (
+    <section>
+      <p className="text-sm text-muted">
+        Bu ayarlar burada değişince <b>hemen</b> geçerli olur; yeniden yayın (Netlify kredisi) gerekmez.
+      </p>
+      <form action={saveSettings} className="card mt-4 space-y-4 p-5">
+        <label className="block">
+          <span className="label">Destek bağlantısı</span>
+          <input name="support_url" type="url" defaultValue={v.support_url} placeholder="https://buymeacoffee.com/…" className="input" />
+          <span className="mt-1 block text-xs text-muted">Boşsa &quot;Destek ol&quot; düğmeleri gizlenir.</span>
+        </label>
+        <label className="block">
+          <span className="label">İletişim e-postası</span>
+          <input name="contact_email" type="email" defaultValue={v.contact_email} placeholder="merhaba@…" className="input" />
+        </label>
+        <label className="block">
+          <span className="label">Gemini model adı</span>
+          <input name="gemini_model" defaultValue={v.gemini_model} placeholder="gemini-flash-latest" className="input" />
+          <span className="mt-1 block text-xs text-muted">Boş bırakırsanız güncel &quot;flash&quot; modeli otomatik seçilir.</span>
+        </label>
+        <label className="block">
+          <span className="label">GitHub deposu (MP4 hazırlamak için)</span>
+          <input name="github_repo" defaultValue={v.github_repo} placeholder="blueman61/pamukhaber" className="input" />
+        </label>
+        <button className="btn btn-primary w-full">Kaydet</button>
+      </form>
     </section>
   );
 }

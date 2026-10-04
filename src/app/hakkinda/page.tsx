@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckIcon, MailIcon, ShieldIcon, SparklesIcon, UserIcon } from "@/components/icons";
 import { PageHero } from "@/components/PageHero";
+import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Hakkında",
@@ -36,9 +37,10 @@ const PRINCIPLES = [
   },
 ];
 
-export default function AboutPage() {
-  const supportUrl = process.env.NEXT_PUBLIC_SUPPORT_URL;
-  const contact = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+export const dynamic = "force-dynamic";
+
+export default async function AboutPage() {
+  const { support_url: supportUrl, contact_email: contact } = await getSettings();
   return (
     <main className="mx-auto min-h-dvh max-w-[480px] pb-12 lg:max-w-4xl">
       <PageHero

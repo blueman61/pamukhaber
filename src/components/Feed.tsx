@@ -19,11 +19,12 @@ type Props = {
   initialCursor: number | null;
   sponsored: FeedStory[];
   category: CategorySlug | null;
+  supportUrl?: string;
 };
 
 const PRELOAD_DISTANCE = 3;
 
-export function Feed({ initialStories, initialCursor, sponsored, category }: Props) {
+export function Feed({ initialStories, initialCursor, sponsored, category, supportUrl }: Props) {
   const [stories, setStories] = useState(initialStories);
   const [cursor, setCursor] = useState(initialCursor);
   const [loading, setLoading] = useState(false);
@@ -155,7 +156,7 @@ export function Feed({ initialStories, initialCursor, sponsored, category }: Pro
                 ) : slide.kind === "newsletter" ? (
                   <NewsletterCard />
                 ) : (
-                  <EndCard empty={stories.length === 0} />
+                  <EndCard empty={stories.length === 0} supportUrl={supportUrl} />
                 )}
               </div>
             ))}
@@ -187,7 +188,7 @@ export function Feed({ initialStories, initialCursor, sponsored, category }: Pro
           </button>
         </div>
       </div>
-      <DesktopAside />
+      <DesktopAside supportUrl={supportUrl} />
     </div>
   );
 }

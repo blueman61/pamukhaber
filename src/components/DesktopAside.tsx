@@ -11,9 +11,8 @@ const KEYS = [
 ] as const;
 
 /** Masaüstü sağ paneli: bülten, haber gönder çağrısı ve klavye ipuçları. */
-export function DesktopAside() {
+export function DesktopAside({ supportUrl }: { supportUrl?: string }) {
   const { email, setEmail, state, error, submit } = useSubscribe();
-  const supportUrl = process.env.NEXT_PUBLIC_SUPPORT_URL;
 
   return (
     <aside className="hidden w-72 shrink-0 flex-col gap-4 xl:flex" aria-label="Pamuk Haber'e katıl">

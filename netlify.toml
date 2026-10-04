@@ -3,6 +3,9 @@
   # Her yayında veritabanı tabloları güncellenir ve (boşsa) örnek içerik eklenir.
   command = "npm run setup && npm run build"
   publish = ".next"
+  # Yalnızca uygulamayı etkileyen dosyalar değişince derle. Belge, test, ekran görüntüsü
+  # ve iş akışı değişiklikleri yayın (15 kredi) harcamasın. Çıkış kodu 0 = derlemeyi atla.
+  ignore = "git diff --quiet ${CACHED_COMMIT_REF:?} $COMMIT_REF -- src public drizzle scripts video package.json package-lock.json next.config.ts tsconfig.json postcss.config.mjs netlify.toml"
 
 [build.environment]
   NODE_VERSION = "22"

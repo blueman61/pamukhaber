@@ -7,7 +7,8 @@
  */
 import { count } from "drizzle-orm";
 import { db } from "./index";
-import { sources, stories, type NewStory } from "./schema";
+import { eq } from "drizzle-orm";
+import { settings, sources, stories, type NewStory } from "./schema";
 import { encodeCategories } from "../lib/categories";
 import { DEFAULT_SOURCES } from "../lib/sources";
 import { slugify } from "../lib/slug";
@@ -89,12 +90,19 @@ const DEMO: Omit<NewStory, "slug">[] = [
 async function main() {
   const withDemo = !process.argv.includes("--no-demo");
 
-  const added = await db
-    .insert(sources)
-    .values(DEFAULT_SOURCES.map((s) => ({ ...s })))
-    .onConflictDoNothing()
-    .returning({ id: sources.id });
-  console.log(`Kaynaklar: ${added.length} yeni kaynak eklendi.`);
+  // Varsayılan kaynaklar yalnızca ilk kurulumda eklenir; yoksa panelden silinen kaynak her yayında geri gelirdi.
+  const [seeded] = await db.select().from(settings).where(eq(settings.key, "sources_seeded"));
+  if (!seeded) {
+    const added = await db
+      .insert(sources)
+      .values(DEFAULT_SOURCES.map((s) => ({ ...s })))
+      .onConflictDoNothing()
+      .returning({ id: sources.id });
+    await db.insert(settings).values({ key: "sources_seeded", value: "1" }).onConflictDoNothing();
+    console.log(`Kaynaklar: ${added.length} yeni kaynak eklendi.`);
+  } else {
+    console.log("Kaynaklar: ilk kurulum zaten yapılmış, dokunulmadı.");
+  }
 
   const [{ value: storyCount }] = await db.select({ value: count() }).from(stories);
   if (withDemo && storyCount === 0) {
