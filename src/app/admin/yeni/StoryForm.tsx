@@ -64,6 +64,7 @@ const VERIFICATION_LABELS: Record<Verification, string> = {
 };
 
 const input = "input";
+const SERVER_TIMEOUT = "Sunucu yanıt vermedi (zaman aşımı olabilir). Biraz bekleyip tekrar deneyin.";
 const smallBtn = "btn btn-sm";
 
 function Field({ label, error, hint, children }: { label: string; error?: string; hint?: React.ReactNode; children: React.ReactNode }) {
@@ -107,7 +108,12 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
 
   function runDraft() {
     startAi(async () => {
-      const res = await aiDraft(aiForm());
+      let res: AiDraftState;
+      try {
+        res = await aiDraft(aiForm());
+      } catch {
+        res = { error: SERVER_TIMEOUT };
+      }
       setDraftState(res);
       if (res.draft) {
         setTitle(res.draft.title);
@@ -119,7 +125,13 @@ export function StoryForm({ defaults, aiEnabled }: { defaults: StoryFormDefaults
   }
 
   function runCorroborate() {
-    startAi(async () => setCorrState(await aiCorroborate(aiForm())));
+    startAi(async () => {
+      try {
+        setCorrState(await aiCorroborate(aiForm()));
+      } catch {
+        setCorrState({ error: SERVER_TIMEOUT });
+      }
+    });
   }
 
   function addExtraSource(url: string) {

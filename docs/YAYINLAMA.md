@@ -101,4 +101,8 @@ Bu tarama Netlify yayını tetiklemez; yalnızca birkaç sunucu isteği harcar.
 | `/admin`'de "Giriş kapalı" uyarısı | `ADMIN_PASSWORD` ve `AUTH_SECRET` (en az 16 karakter) tanımlı olmalı; ekledikten sonra yeniden yayınlayın. |
 | Akış boş, "Bu kategoride henüz haber yok" | Örnek içerikleri sildiyseniz normaldir: `/admin` → Kaynakları tara → aday seçip yayınlayın. |
 | RSS taramasında kaynaklar hata veriyor | `/admin` → **Kaynaklar** sekmesinde hata veren adresi güncelleyin veya kapatın. |
+| "Gemini API anahtarı geçersiz" | <https://aistudio.google.com/apikey> adresinden anahtarı yeniden kopyalayın (başında/sonunda boşluk olmasın), `GEMINI_API_KEY`'i güncelleyip yeniden yayınlayın. |
+| "Gemini modeli bulunamadı" | `GEMINI_MODEL` tanımladıysanız silin (varsayılan `gemini-flash-latest` kullanılır) ya da AI Studio'daki güncel bir model adını girin. |
+| "Yapay zekâ zamanında yanıt veremedi" | Netlify ücretsiz planı sunucu işlerini 10 saniyede keser. Tekrar deneyin; sık oluyorsa `GEMINI_MODEL=gemini-flash-lite-latest` (daha hızlı) deneyin. |
+| Yapay zekâ başka bir hata veriyor | Mesajın sonundaki parantez içindeki ayrıntıya bakın; tam kayıt **Netlify → Logs → Functions** bölümünde `[ai]` ile başlayan satırlardadır. |
 | Site "Site not available" diyor | Netlify aylık kredisi bitmiş olabilir; **Team → Billing / Usage** bölümüne bakın. |

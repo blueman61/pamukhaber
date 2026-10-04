@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, type GenerateContentParameters, type GenerateContentResponse } from "@google/genai";
 import { CATEGORIES, isCategory, type CategorySlug } from "./categories";
 import { fetchText, stripHtml } from "./ingest";
 import { isSafePublicUrl, safePublicFetch } from "./submissions";
@@ -9,15 +9,20 @@ import { SUMMARY_MAX, TITLE_MAX } from "./validation";
  * çıktı editör formuna öneri olarak gelir.
  */
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+/** Google'ın kendisi güncel tuttuğu takma adlar; tek bir sürüme bağlı kalmayız. */
+export const DEFAULT_GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
 const ARTICLE_MAX_CHARS = 12_000;
+/** Netlify ücretsiz planında sunucu fonksiyonu 10 sn'de kesilir; işi bunun altında bitiririz. */
+export const AI_BUDGET_MS = 8_500;
+const ARTICLE_BUDGET_MS = 4_000;
 
 export function isAiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
 
-function geminiModel(): string {
-  return process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+export function candidateModels(preferred = process.env.GEMINI_MODEL): string[] {
+  const list = [preferred?.trim(), ...DEFAULT_GEMINI_MODELS].filter((m): m is string => Boolean(m));
+  return [...new Set(list)];
 }
 
 let client: GoogleGenAI | null = null;
@@ -42,40 +47,132 @@ export type AiDraft = {
 
 export type Corroboration = { note: string; sources: { title: string; url: string }[] };
 
-/** Testlerde gerçek API yerine sahte bir üretici verilebilir. */
+/** Testlerde gerçek API yerine sahte bir üretici verilebilir. `deadline`: Date.now() cinsinden son an. */
 export type Generator = {
-  json: (system: string, prompt: string, schema: object) => Promise<string>;
-  grounded: (prompt: string) => Promise<{ text: string; sources: { title: string; url: string }[] }>;
+  json: (system: string, prompt: string, schema: object, deadline: number) => Promise<string>;
+  grounded: (prompt: string, deadline: number) => Promise<{ text: string; sources: { title: string; url: string }[] }>;
 };
 
-const geminiGenerator: Generator = {
-  async json(system, prompt, schema) {
-    const res = await gemini().models.generateContent({
-      model: geminiModel(),
-      contents: prompt,
-      config: {
-        systemInstruction: system,
-        responseMimeType: "application/json",
-        responseJsonSchema: schema,
-        temperature: 0.4,
-      },
-    });
-    return res.text ?? "";
-  },
-  async grounded(prompt) {
-    const res = await gemini().models.generateContent({
-      model: geminiModel(),
-      contents: prompt,
-      config: { tools: [{ googleSearch: {} }], temperature: 0.2 },
-    });
-    const chunks = res.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
-    const sources = chunks
-      .map((c) => c.web)
-      .filter((w): w is { uri: string; title?: string } => Boolean(w?.uri))
-      .map((w) => ({ title: w.title || new URL(w.uri).hostname, url: w.uri }));
-    return { text: res.text ?? "", sources };
-  },
-};
+export type GeminiCall = (params: GenerateContentParameters) => Promise<GenerateContentResponse>;
+
+type ApiErrorInfo = { status?: number; code?: string; message: string; raw: string };
+
+/** SDK hatasından HTTP durumu, Google durum kodu ve okunur mesajı çıkarır. */
+export function apiErrorInfo(err: unknown): ApiErrorInfo {
+  const raw = err instanceof Error ? err.message : String(err);
+  const status = typeof (err as { status?: unknown })?.status === "number" ? (err as { status: number }).status : undefined;
+  let message = raw;
+  let code: string | undefined;
+  const jsonStart = raw.indexOf("{");
+  if (jsonStart >= 0) {
+    try {
+      const body = JSON.parse(raw.slice(jsonStart)) as { error?: { message?: string; status?: string } };
+      message = body.error?.message ?? raw;
+      code = body.error?.status;
+    } catch {
+      // JSON değilse ham mesajla devam.
+    }
+  }
+  return { status, code, message, raw };
+}
+
+const isTimeout = (err: unknown) =>
+  err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError" || /aborted|timed? ?out/i.test(err.message));
+
+const isModelUnavailable = (e: ApiErrorInfo) =>
+  e.status === 404 || e.code === "NOT_FOUND" || (e.status === 400 && /model.*(not found|not supported|is not available|unsupported)|unknown model/i.test(e.message));
+
+const isThinkingRejected = (e: ApiErrorInfo) => e.status === 400 && /thinking/i.test(e.message);
+
+function thinkingFor(model: string) {
+  // 2.5 nesli bütçeyle, 3+ nesli düzeyle ayarlanır; ikisi de hız için düşük tutulur.
+  return /2\.5/.test(model) ? { thinkingBudget: 0 } : { thinkingLevel: ThinkingLevel.LOW };
+}
+
+const TIMEOUT_MESSAGE =
+  "Yapay zekâ zamanında yanıt veremedi (Netlify ücretsiz planda sunucu 10 saniyede kesilir). Tekrar deneyin; sorun sürerse daha hızlı bir model için GEMINI_MODEL'i değiştirin.";
+
+/**
+ * Gemini çağrılarını sarar: sırayla modelleri dener (bulunamayan modeli atlar), çalışanı hatırlar,
+ * düşünme ayarını reddeden modelde ayarsız tekrar dener ve süre bütçesine uyar.
+ */
+export function createGeminiGenerator(call: GeminiCall, models: () => string[] = () => candidateModels()): Generator {
+  let workingModel: string | null = null;
+
+  async function run(build: (model: string) => GenerateContentParameters, deadline: number) {
+    const list = workingModel ? [workingModel, ...models().filter((m) => m !== workingModel)] : models();
+    let last: ApiErrorInfo | null = null;
+    for (const model of list) {
+      for (const withThinking of [true, false]) {
+        const remaining = deadline - Date.now();
+        if (remaining < 300) throw new AiError(TIMEOUT_MESSAGE);
+        const params = build(model);
+        params.config = {
+          ...params.config,
+          ...(withThinking ? { thinkingConfig: thinkingFor(model) } : {}),
+          abortSignal: AbortSignal.timeout(remaining),
+        };
+        try {
+          const res = await call(params);
+          workingModel = model;
+          return res;
+        } catch (err) {
+          if (isTimeout(err)) throw new AiError(TIMEOUT_MESSAGE);
+          const info = apiErrorInfo(err);
+          last = info;
+          if (withThinking && isThinkingRejected(info)) continue;
+          if (isModelUnavailable(info)) {
+            console.error(`[ai] Model kullanılamıyor: ${model} → ${info.message}`);
+            if (workingModel === model) workingModel = null;
+            break;
+          }
+          throw err;
+        }
+      }
+    }
+    throw new AiError(
+      `Gemini modeli bulunamadı (${list.join(", ")}). Netlify'da GEMINI_MODEL değişkenine geçerli bir model adı girin.` +
+        (last ? ` Ayrıntı: ${safeDetail(last)}` : ""),
+    );
+  }
+
+  return {
+    async json(system, prompt, schema, deadline) {
+      const res = await run(
+        (model) => ({
+          model,
+          contents: prompt,
+          config: {
+            systemInstruction: system,
+            responseMimeType: "application/json",
+            responseJsonSchema: schema,
+            temperature: 0.4,
+          },
+        }),
+        deadline,
+      );
+      return res.text ?? "";
+    },
+    async grounded(prompt, deadline) {
+      const res = await run(
+        (model) => ({ model, contents: prompt, config: { tools: [{ googleSearch: {} }], temperature: 0.2 } }),
+        deadline,
+      );
+      const chunks = res.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
+      const sources = chunks
+        .map((c) => c.web)
+        .filter((w): w is { uri: string; title?: string } => Boolean(w?.uri))
+        .map((w) => ({ title: w.title || new URL(w.uri).hostname, url: w.uri }));
+      return { text: res.text ?? "", sources };
+    },
+  };
+}
+
+let defaultGenerator: Generator | null = null;
+function geminiGenerator(): Generator {
+  defaultGenerator ??= createGeminiGenerator((params) => gemini().models.generateContent(params));
+  return defaultGenerator;
+}
 
 const SYSTEM = `Sen "Pamuk Haber" adlı, yalnızca iç ısıtan gerçek haberler yayınlayan Türkçe bir sitenin editör yardımcısısın.
 Görevin: verilen haber metninden editöre TASLAK hazırlamak. Editör her şeyi kontrol edip düzeltecek.
@@ -145,8 +242,13 @@ export function parseDraft(raw: string): AiDraft {
   };
 }
 
-export async function generateDraft(input: ArticleInput, gen: Generator = geminiGenerator): Promise<AiDraft> {
-  const article = await fetchArticleText(input.url);
+const within = <T,>(p: Promise<T>, ms: number, fallback: T) =>
+  Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+
+export async function generateDraft(input: ArticleInput, gen: Generator = geminiGenerator()): Promise<AiDraft> {
+  const deadline = Date.now() + AI_BUDGET_MS;
+  // Sayfa yavaşsa beklemeyiz; taslak başlık ve özetten üretilir.
+  const article = await within(fetchArticleText(input.url), ARTICLE_BUDGET_MS, null);
   const prompt = [
     `Haber başlığı: ${input.title}`,
     input.url ? `Kaynak: ${input.url}` : null,
@@ -156,7 +258,7 @@ export async function generateDraft(input: ArticleInput, gen: Generator = gemini
     .filter(Boolean)
     .join("\n\n");
   try {
-    return parseDraft(await gen.json(SYSTEM, prompt, DRAFT_SCHEMA));
+    return parseDraft(await gen.json(SYSTEM, prompt, DRAFT_SCHEMA, deadline));
   } catch (err) {
     throw toAiError(err);
   }
@@ -164,15 +266,16 @@ export async function generateDraft(input: ArticleInput, gen: Generator = gemini
 
 export async function findCorroboration(
   input: { title: string; summary: string; sourceUrl: string | null },
-  gen: Generator = geminiGenerator,
+  gen: Generator = geminiGenerator(),
 ): Promise<Corroboration> {
+  const deadline = Date.now() + AI_BUDGET_MS;
   const prompt = `Aşağıdaki haberi web'de ara ve başka bağımsız, güvenilir kaynaklarda da yer alıp almadığını kontrol et.
 Haber: ${input.title}
 Özet: ${input.summary}
 ${input.sourceUrl ? `Ana kaynak (bunu sayma): ${input.sourceUrl}` : ""}
 Türkçe, en fazla 3 cümlelik bir not yaz: haber başka kaynaklarda doğrulanıyor mu, çelişen bilgi var mı? Emin değilsen açıkça söyle.`;
   try {
-    const res = await gen.grounded(prompt);
+    const res = await gen.grounded(prompt, deadline);
     const seen = new Set<string>();
     const sources = res.sources.filter((s) => {
       if (seen.has(s.url) || s.url === input.sourceUrl) return false;
@@ -185,10 +288,23 @@ Türkçe, en fazla 3 cümlelik bir not yaz: haber başka kaynaklarda doğrulanı
   }
 }
 
-function toAiError(err: unknown): AiError {
+/** Editöre gösterilecek kısa teknik ayrıntı (API anahtarı içermez). */
+function safeDetail(e: ApiErrorInfo): string {
+  const text = e.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[anahtar]").replace(/\s+/g, " ").trim();
+  return `(${e.status ?? e.code ?? "?"}: ${text.length > 160 ? `${text.slice(0, 159)}…` : text})`;
+}
+
+export function toAiError(err: unknown): AiError {
   if (err instanceof AiError) return err;
-  const status = (err as { status?: number })?.status;
-  if (status === 429) return new AiError("Yapay zekâ kotası doldu; biraz sonra tekrar deneyin.");
-  if (status === 401 || status === 403) return new AiError("Gemini API anahtarı geçersiz ya da yetkisiz.");
-  return new AiError("Yapay zekâya ulaşılamadı. Tekrar deneyin.");
+  if (isTimeout(err)) return new AiError(TIMEOUT_MESSAGE);
+  const e = apiErrorInfo(err);
+  // Asıl nedeni Netlify → Logs → Functions'ta görmek için.
+  console.error("[ai] Gemini hatası:", e.status, e.code, e.message);
+  if (e.status === 429 || e.code === "RESOURCE_EXHAUSTED")
+    return new AiError("Yapay zekâ kotası doldu; biraz sonra tekrar deneyin.");
+  if (e.status === 401 || e.status === 403 || /API_KEY_INVALID|API key not valid|PERMISSION_DENIED/i.test(e.raw))
+    return new AiError("Gemini API anahtarı geçersiz ya da yetkisiz. Netlify'daki GEMINI_API_KEY değerini kontrol edin.");
+  if (/location is not supported|FAILED_PRECONDITION/i.test(e.raw))
+    return new AiError("Gemini bu sunucu bölgesinden kullanılamıyor. " + safeDetail(e));
+  return new AiError(`Yapay zekâya ulaşılamadı. Tekrar deneyin. ${safeDetail(e)}`);
 }
