@@ -27,7 +27,7 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
   const closeInfo = useCallback(() => setInfoOpen(false), []);
   const isScene = useIsScene(story);
   const category = getCategory(story.category);
-  const isVideo = story.mediaType === "video";
+  const hasSound = story.mediaType === "video" || story.mediaType === "youtube" || story.mediaType === "tiktok";
   const outbound = story.isSponsored ? story.sponsorUrl : story.sourceUrl;
 
   // Görsel kartında görsel, panelin üstündeki alana sığsın diye panel yüksekliğini ölçer.
@@ -162,7 +162,7 @@ export function StoryCard({ story, active, liked, muted, onLike, onToggleMute, o
               <DotIcon className="h-[26px] w-[26px]" />
             </span>
           </RailButton>
-          {isVideo && (
+          {hasSound && (
             <RailButton label={muted ? "Sesi aç" : "Sesi kapat"} onClick={onToggleMute}>
               <span className="flex h-11 w-11 items-center justify-center">
                 <VolumeIcon filled={!muted} className="h-6 w-6" />

@@ -16,6 +16,8 @@ Yalnızca güzel ve iç ısıtan haberlerin, TikTok benzeri dikey kaydırmalı k
   <img src="docs/ekran/karanlik.png" width="200" alt="Karanlık mod">
 </p>
 
+Her fazda neler yapıldığının özeti: **[docs/OZET.md](docs/OZET.md)**
+
 İçerik kaynakları, gelir modeli, operasyon ve yol haritası için: **[docs/STRATEJI.md](docs/STRATEJI.md)**
 
 ## Hızlı başlangıç

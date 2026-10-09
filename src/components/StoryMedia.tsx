@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildScene } from "@/remotion/scene-data";
 import { useIsScene } from "./useScene";
 import { isCategory } from "@/lib/categories";
 import { CategoryArt } from "./CategoryArt";
+import { audioMessage, embedOrigin } from "@/lib/embed-audio";
 import { embedSrc, isEmbedType, PLATFORM_LABELS, youtubeId, youtubeThumbnail, type EmbedType } from "@/lib/media";
 import type { FeedStory } from "@/lib/stories";
 
@@ -44,7 +45,7 @@ export function StoryMedia({ story, active, muted }: Props) {
     const src = embedSrc(story.mediaType, story.mediaUrl);
     if (src) {
       // Aktiflik değişince durum sıfırlansın diye yeniden bağlanır.
-      return <Embed key={String(active)} type={story.mediaType} src={src} story={story} active={active} />;
+      return <Embed key={String(active)} type={story.mediaType} src={src} story={story} active={active} muted={muted} />;
     }
   }
 
@@ -150,8 +151,25 @@ function PastelBackground({ category, seed, label }: { category: string; seed: n
  * yuttuğu için üstünde şeffaf bir katman durur: kaydırma akışa gider. "Oynatıcıyı kullan"
  * ile katman kalkar, "Kaydırmaya dön" ile geri gelir.
  */
-function Embed({ type, src, story, active }: { type: EmbedType; src: string; story: FeedStory; active: boolean }) {
+function Embed({ type, src, story, active, muted }: { type: EmbedType; src: string; story: FeedStory; active: boolean; muted: boolean }) {
   const [interactive, setInteractive] = useState(false);
+  const frameRef = useRef<HTMLIFrameElement>(null);
+
+  // Ses: iframe sessiz başlar (otomatik oynatma şartı); okur sesi açınca komut gönderilir.
+  // Oynatıcı hazır olmadan gelen komut kaybolabileceği için birkaç kez tekrarlanır.
+  const sendAudio = useCallback(() => {
+    const msg = audioMessage(type, muted);
+    const win = frameRef.current?.contentWindow;
+    if (msg && win) win.postMessage(msg, embedOrigin(src));
+  }, [type, muted, src]);
+
+  useEffect(() => {
+    if (!active) return;
+    sendAudio();
+    const timers = [600, 1500, 3000].map((ms) => setTimeout(sendAudio, ms));
+    return () => timers.forEach(clearTimeout);
+  }, [active, sendAudio]);
+
   const label = PLATFORM_LABELS[type];
 
   if (!active) {
@@ -169,6 +187,8 @@ function Embed({ type, src, story, active }: { type: EmbedType; src: string; sto
     <div className="absolute inset-0 bg-[#1c1622]">
       {isInstagram && <PastelBackground category={story.category} seed={story.id} />}
       <iframe
+        ref={frameRef}
+        onLoad={sendAudio}
         src={src}
         title={`${label}: ${story.title}`}
         data-embed={type}

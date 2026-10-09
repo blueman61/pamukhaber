@@ -97,6 +97,7 @@ export function youtubeEmbedUrl(id: string, autoplay: boolean): string {
     playlist: id,
     controls: "1",
     playsinline: "1",
+    enablejsapi: "1",
     modestbranding: "1",
     rel: "0",
   });
